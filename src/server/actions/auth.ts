@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { UserRole } from "@/generated/prisma/client";
 import {
+  confirmAuthEmailIfInternallyVerified,
   createInternalEstablishmentUser,
   createInternalFreelancerUser,
   findAuthUserByEmail,
@@ -96,9 +97,35 @@ export async function loginAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  let { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+
+  if (error?.message.toLowerCase().includes("email not confirmed")) {
+    try {
+      const confirmed = await confirmAuthEmailIfInternallyVerified(
+        parsed.data.email,
+      );
+
+      if (confirmed) {
+        const retry = await supabase.auth.signInWithPassword(parsed.data);
+        data = retry.data;
+        error = retry.error;
+      }
+    } catch {
+      return {
+        message:
+          "Nao foi possivel sincronizar a validacao manual do email agora.",
+      };
+    }
+  }
 
   if (error || !data.user) {
+    if (error?.message.toLowerCase().includes("email not confirmed")) {
+      return {
+        message:
+          "Cadastro pendente de validacao. Confirme o email ou aguarde aprovacao manual.",
+      };
+    }
+
     return { message: "Email ou senha invalidos." };
   }
 

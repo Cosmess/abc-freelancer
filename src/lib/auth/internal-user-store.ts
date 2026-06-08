@@ -88,6 +88,37 @@ export async function findAuthUserByEmail(email: string) {
   ) ?? null;
 }
 
+export async function confirmAuthEmailIfInternallyVerified(email: string) {
+  const internalUser = await findInternalUserByEmail(email);
+
+  if (!internalUser?.emailVerifiedAt) {
+    return false;
+  }
+
+  const authUser = await findAuthUserByEmail(email);
+
+  if (!authUser) {
+    return false;
+  }
+
+  if (authUser.email_confirmed_at) {
+    return true;
+  }
+
+  const { error } = await getSupabaseAdminClient().auth.admin.updateUserById(
+    authUser.id,
+    {
+      email_confirm: true,
+    },
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
 export async function syncInternalUserFromSupabaseUser(
   authUser: SupabaseAuthUser,
 ) {

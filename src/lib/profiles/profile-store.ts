@@ -473,7 +473,7 @@ export async function getFreelancerCatalog(input: {
   let query = supabase
     .from("FreelancerProfile")
     .select("id,fullName,city,neighborhood,bio,profilePhotoUrl,instagram", { count: "exact" })
-    .eq("status", "APPROVED")
+    .neq("status", "BLOCKED")
     .order("fullName", { ascending: true })
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
 
@@ -561,6 +561,86 @@ export async function getFreelancerCatalog(input: {
       instagram: profile.instagram ?? null,
       specialties: specialtiesByFreelancer.get(profile.id) ?? [],
       shifts: shiftsByFreelancer.get(profile.id) ?? [],
+    })),
+    total,
+    page,
+    pageSize: CATALOG_PAGE_SIZE,
+    totalPages: Math.ceil(total / CATALOG_PAGE_SIZE),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Establishment catalog
+// ---------------------------------------------------------------------------
+
+export type EstablishmentCatalogItem = {
+  id: string;
+  tradeName: string;
+  type: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  description: string | null;
+  profilePhotoUrl: string | null;
+  instagram: string | null;
+};
+
+export type EstablishmentCatalogResult = {
+  items: EstablishmentCatalogItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export async function getEstablishmentCatalog(input: {
+  city?: string;
+  neighborhood?: string;
+  name?: string;
+  page?: number;
+}): Promise<EstablishmentCatalogResult> {
+  const supabase = getSupabaseAdminClient();
+  const page = Math.max(1, input.page ?? 1);
+
+  let query = supabase
+    .from("EstablishmentProfile")
+    .select("id,tradeName,type,city,neighborhood,description,profilePhotoUrl,instagram", { count: "exact" })
+    .neq("status", "BLOCKED")
+    .order("tradeName", { ascending: true })
+    .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
+
+  if (input.city) {
+    query = query.ilike("city", `%${input.city}%`);
+  }
+
+  if (input.neighborhood) {
+    query = query.ilike("neighborhood", `%${input.neighborhood}%`);
+  }
+
+  if (input.name) {
+    query = query.ilike("tradeName", `%${input.name}%`);
+  }
+
+  const { data, error, count } = await query.returns<
+    Array<{
+      id: string;
+      tradeName: string;
+      type: string | null;
+      city: string | null;
+      neighborhood: string | null;
+      description: string | null;
+      profilePhotoUrl: string | null;
+      instagram: string | null;
+    }>
+  >();
+
+  if (error) throw error;
+
+  const total = count ?? 0;
+
+  return {
+    items: (data ?? []).map((item) => ({
+      ...item,
+      instagram: item.instagram ?? null,
     })),
     total,
     page,

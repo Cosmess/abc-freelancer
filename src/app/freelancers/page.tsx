@@ -10,7 +10,7 @@ import {
   getActiveSpecialties,
   getFreelancerCatalog,
 } from "@/lib/profiles/profile-store";
-import { requireUser } from "@/server/guards/auth";
+import { requireEstablishment } from "@/server/guards/auth";
 
 export const metadata: Metadata = {
   title: "Freelancers — ABC Freelancer",
@@ -34,7 +34,7 @@ const SHIFT_OPTIONS = [
 ];
 
 export default async function FreelancerCatalogPage({ searchParams }: Props) {
-  const user = await requireUser();
+  await requireEstablishment();
   const params = await searchParams;
 
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
@@ -80,7 +80,7 @@ export default async function FreelancerCatalogPage({ searchParams }: Props) {
             </p>
           </div>
           <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link href={user.role === "ESTABLISHMENT" ? "/app/estabelecimento" : "/app/freelancer"}>
+            <Link href="/app/estabelecimento">
               Voltar ao painel
             </Link>
           </Button>

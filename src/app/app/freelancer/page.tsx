@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardList, UserRound, Users } from "lucide-react";
+import { Building2, CalendarDays, ClipboardList, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -26,7 +26,7 @@ export default async function FreelancerDashboardPage() {
             ["Perfil", "Complete seus dados profissionais.", UserRound, "/app/freelancer/perfil"],
             ["Vagas", "Busque oportunidades disponiveis.", CalendarDays, "/vagas"],
             ["Candidaturas", "Acompanhe vagas aplicadas.", ClipboardList, "/app/freelancer/candidaturas"],
-            ["Freelancers", "Veja outros profissionais da plataforma.", Users, "/freelancers"],
+            ["Estabelecimentos", "Veja os estabelecimentos da regiao.", Building2, "/estabelecimentos"],
           ].map(([title, description, Icon, href]) => (
             <article key={title as string} className="rounded-lg border bg-card p-5 shadow-sm">
               <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/15">

@@ -5,8 +5,10 @@ import { UserRole } from "@/generated/prisma/client";
 import {
   findInternalUserByAuthId,
   syncInternalUserFromSupabaseUser,
+  type InternalUser,
 } from "@/lib/auth/internal-user-store";
 import { getRoleHomePath } from "@/lib/auth/paths";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const getCurrentUser = cache(async () => {
@@ -58,4 +60,36 @@ export function requireEstablishment() {
 
 export function requireAdmin() {
   return requireRole(UserRole.ADMIN);
+}
+
+async function hasActiveSubscription(userId: string): Promise<boolean> {
+  const activeStatuses = ["ACTIVE", "AUTHORIZED", "TRIALING"];
+  const { data } = await getSupabaseAdminClient()
+    .from("Subscription")
+    .select("id")
+    .eq("userId", userId)
+    .in("status", activeStatuses)
+    .limit(1)
+    .maybeSingle();
+
+  return Boolean(data);
+}
+
+export async function requireActiveAccess(user: InternalUser): Promise<void> {
+  // ADMINs always have access
+  if (user.role === UserRole.ADMIN) return;
+
+  // Trial still valid
+  if (new Date() <= new Date(user.trialEndsAt)) return;
+
+  // Check for an active paid subscription
+  const active = await hasActiveSubscription(user.id);
+
+  if (!active) {
+    const planPath =
+      user.role === UserRole.ESTABLISHMENT
+        ? "/app/estabelecimento/plano"
+        : "/app/freelancer/plano";
+    redirect(planPath);
+  }
 }

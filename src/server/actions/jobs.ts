@@ -15,7 +15,7 @@ import {
   getFreelancerProfile,
 } from "@/lib/profiles/profile-store";
 import { jobPostSchema, type ProfileActionState } from "@/lib/profiles/validators";
-import { requireEstablishment, requireFreelancer } from "@/server/guards/auth";
+import { requireActiveAccess, requireEstablishment, requireFreelancer } from "@/server/guards/auth";
 
 function flattenErrors(error: {
   flatten: () => { fieldErrors: Record<string, string[] | undefined> };
@@ -32,6 +32,7 @@ export async function createJobPostAction(
   formData: FormData,
 ): Promise<ProfileActionState> {
   const user = await requireEstablishment();
+  await requireActiveAccess(user);
   const profile = await getEstablishmentProfile(user.id);
 
   if (!profile) {
@@ -63,6 +64,7 @@ export async function createJobPostAction(
 
 export async function applyToJobAction(jobPostId: string, formData: FormData) {
   const user = await requireFreelancer();
+  await requireActiveAccess(user);
   const profile = await getFreelancerProfile(user.id);
 
   if (!profile) {

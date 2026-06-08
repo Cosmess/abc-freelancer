@@ -130,12 +130,14 @@ export async function syncInternalUserFromSupabaseUser(
   const emailVerifiedAt = authUser.email_confirmed_at ?? null;
 
   if (existing) {
+    // role is intentionally NOT updated here — it is set at creation time and
+    // managed internally. user_metadata is user-controlled and must not
+    // be trusted for authorization decisions on existing accounts.
     const { data, error } = await supabase
       .from("User")
       .update({
         email: authUser.email ?? existing.email,
         name: getAuthUserName(authUser),
-        role,
         emailVerifiedAt,
       })
       .eq("id", existing.id)

@@ -263,6 +263,10 @@ export async function replaceFreelancerAvailability(input: {
     noite: { startTime: "18:00", endTime: "23:59" },
   };
 
+  const validDays = new Set([
+    "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY",
+  ]);
+
   const rows: Array<{
     id: string;
     freelancerId: string;
@@ -275,6 +279,10 @@ export async function replaceFreelancerAvailability(input: {
   }> = [];
 
   input.preferences.forEach((preference) => {
+      if (!validDays.has(preference.dayOfWeek)) {
+        return;
+      }
+
       const shift = shiftTimes[preference.shift];
 
       if (!shift) {

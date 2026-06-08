@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ArrowLeft, ClipboardList, MapPin } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import {
+  formatJobAddress,
+  getApplicationStatusLabel,
+  getJobMapsUrl,
+} from "@/lib/jobs/formatters";
 import { getFreelancerApplications } from "@/lib/jobs/job-store";
 import { getFreelancerProfile } from "@/lib/profiles/profile-store";
 import { requireFreelancer } from "@/server/guards/auth";
@@ -45,10 +50,11 @@ export default async function FreelancerApplicationsPage() {
                       {application.establishmentName} - {application.specialtyName}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {application.job.city}
-                      {application.job.neighborhood ? `, ${application.job.neighborhood}` : ""} -{" "}
                       {new Date(application.job.workDate).toLocaleDateString("pt-BR")} das{" "}
                       {application.job.startTime} as {application.job.endTime}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Endereco: {formatJobAddress(application.job)}
                     </p>
                     {application.establishmentWhatsapp ? (
                       <p className="mt-2 text-sm font-medium">
@@ -56,8 +62,18 @@ export default async function FreelancerApplicationsPage() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                    {application.status}
+                  <div className="grid gap-2 md:min-w-44">
+                    <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
+                      {getApplicationStatusLabel(application.status)}
+                    </div>
+                    {getJobMapsUrl(application.job) ? (
+                      <Button asChild variant="outline">
+                        <a href={getJobMapsUrl(application.job) ?? ""} target="_blank" rel="noreferrer">
+                          <MapPin className="size-4" />
+                          Abrir no Maps
+                        </a>
+                      </Button>
+                    ) : null}
                   </div>
                 </article>
               ))}

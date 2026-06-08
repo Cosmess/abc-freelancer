@@ -1,8 +1,13 @@
 import Link from "next/link";
-import { BriefcaseBusiness, Search, Send } from "lucide-react";
+import { BriefcaseBusiness, MapPin, Search, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/generated/prisma/client";
+import {
+  formatJobAddress,
+  getApplicationStatusLabel,
+  getJobMapsUrl,
+} from "@/lib/jobs/formatters";
 import { getOpenJobListings } from "@/lib/jobs/job-store";
 import { getActiveSpecialties, getFreelancerProfile } from "@/lib/profiles/profile-store";
 import { applyToJobAction } from "@/server/actions/jobs";
@@ -109,10 +114,11 @@ export default async function JobsPage({ searchParams }: Props) {
                       {job.establishmentName} - {job.specialtyName}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {job.city}
-                      {job.neighborhood ? `, ${job.neighborhood}` : ""} -{" "}
                       {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
                       {job.startTime} as {job.endTime}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Endereco: {formatJobAddress(job)}
                     </p>
                     {job.description ? (
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
@@ -128,7 +134,7 @@ export default async function JobsPage({ searchParams }: Props) {
                     {user.role === UserRole.FREELANCER ? (
                       job.applicationStatus ? (
                         <div className="rounded-md border px-3 py-2 text-xs">
-                          Candidatura: {job.applicationStatus}
+                          Candidatura: {getApplicationStatusLabel(job.applicationStatus)}
                         </div>
                       ) : (
                         <form action={applyToJobAction.bind(null, job.id)}>
@@ -138,6 +144,14 @@ export default async function JobsPage({ searchParams }: Props) {
                           </Button>
                         </form>
                       )
+                    ) : null}
+                    {getJobMapsUrl(job) ? (
+                      <Button asChild variant="outline">
+                        <a href={getJobMapsUrl(job) ?? ""} target="_blank" rel="noreferrer">
+                          <MapPin className="size-4" />
+                          Abrir no Maps
+                        </a>
+                      </Button>
                     ) : null}
                   </div>
                 </article>

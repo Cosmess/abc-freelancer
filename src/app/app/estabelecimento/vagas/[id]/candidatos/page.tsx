@@ -3,6 +3,7 @@ import { ArrowLeft, Check, ClipboardList, X } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { getApplicationStatusLabel } from "@/lib/jobs/formatters";
 import { getApplicationsByJobForEstablishment } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
 import {
@@ -69,7 +70,7 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-medium">{application.freelancer.fullName}</h2>
                       <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
-                        {application.status}
+                        {getApplicationStatusLabel(application.status)}
                       </span>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">

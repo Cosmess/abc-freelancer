@@ -3,6 +3,7 @@ import { ArrowLeft, ClipboardList, Plus, Trash2, Users } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { getJobStatusLabel } from "@/lib/jobs/formatters";
 import { getJobPostsByEstablishment } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
 import { deleteJobPostAction } from "@/server/actions/jobs";
@@ -57,7 +58,7 @@ export default async function EstablishmentJobsPage() {
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
-                      {job.quantity} vaga(s) - {job.status}
+                      {job.quantity} vaga(s) - {getJobStatusLabel(job.status)}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">

@@ -9,6 +9,7 @@ export type InternalUser = {
   supabaseAuthUserId: string;
   name: string;
   email: string;
+  phone: string | null;
   role: UserRole;
   emailVerifiedAt: string | null;
   trialStartsAt: string;

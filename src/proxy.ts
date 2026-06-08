@@ -33,7 +33,10 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isPrivateRoute =
-    pathname.startsWith("/app") || pathname.startsWith("/admin");
+    pathname.startsWith("/app") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/vagas") ||
+    pathname.startsWith("/estabelecimentos");
 
   if (isPrivateRoute && !user) {
     const redirectUrl = request.nextUrl.clone();
@@ -46,5 +49,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/app/:path*", "/admin/:path*"],
+  matcher: ["/app/:path*", "/admin/:path*", "/vagas/:path*", "/estabelecimentos/:path*"],
 };

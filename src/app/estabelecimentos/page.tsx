@@ -2,8 +2,11 @@ import Link from "next/link";
 import { Building2, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { requireUser } from "@/server/guards/auth";
 
-export default function EstablishmentsPage() {
+export default async function EstablishmentsPage() {
+  await requireUser();
+
   return (
     <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">
       <section className="mx-auto grid max-w-6xl gap-6">
@@ -32,8 +35,8 @@ export default function EstablishmentsPage() {
           <Building2 className="mb-4 size-6 text-muted-foreground" />
           <h2 className="font-medium">Catalogo em preparacao</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Os filtros por cidade, bairro, rua e nome entram junto com a
-            aprovacao de perfis no admin.
+            Esta area ja esta bloqueada para usuarios logados. Os filtros por
+            cidade, bairro, rua e nome entram junto com aprovacao de perfis.
           </p>
         </div>
       </section>

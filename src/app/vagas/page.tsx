@@ -2,8 +2,11 @@ import Link from "next/link";
 import { BriefcaseBusiness, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { requireUser } from "@/server/guards/auth";
 
-export default function JobsPage() {
+export default async function JobsPage() {
+  await requireUser();
+
   return (
     <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">
       <section className="mx-auto grid max-w-6xl gap-6">
@@ -32,8 +35,8 @@ export default function JobsPage() {
           <BriefcaseBusiness className="mb-4 size-6 text-muted-foreground" />
           <h2 className="font-medium">Catalogo de vagas em preparacao</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            O CRUD de vagas e candidaturas sera o proximo bloco de
-            implementacao. Por enquanto, o cadastro e login ja estao ativos.
+            Esta area ja esta bloqueada para usuarios logados. O proximo bloco
+            implementa filtros reais, CRUD de vagas e candidatura.
           </p>
         </div>
       </section>

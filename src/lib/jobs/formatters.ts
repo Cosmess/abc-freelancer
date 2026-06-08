@@ -51,6 +51,14 @@ export function formatJobSchedule(job: JobPost) {
   return `${new Date(job.workDate).toLocaleDateString("pt-BR")} das ${job.startTime} as ${job.endTime}`;
 }
 
+export function getInstagramUrl(handle: string | null | undefined): string | null {
+  const username = handle?.replace(/^@+/, "").trim();
+
+  if (!username) return null;
+
+  return `https://www.instagram.com/${username}`;
+}
+
 export function getWhatsAppUrl(phone: string | null | undefined, message: string) {
   const digits = phone?.replace(/\D/g, "") ?? "";
 

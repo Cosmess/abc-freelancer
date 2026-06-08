@@ -3,11 +3,13 @@ import { ArrowLeft, Check, ClipboardList, MessageCircle, X } from "lucide-react"
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import {
   formatJobAddress,
   formatJobSchedule,
   getApplicationStatusLabel,
   getEstablishmentToFreelancerMessage,
+  getInstagramUrl,
   getJobStatusLabel,
   getWhatsAppUrl,
 } from "@/lib/jobs/formatters";
@@ -138,6 +140,18 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2 sm:flex-row lg:min-w-52 lg:flex-col lg:items-end">
+                    {application.freelancer.instagram ? (
+                      <Button asChild variant="outline" className="flex-1 sm:flex-none lg:w-full">
+                        <a
+                          href={getInstagramUrl(application.freelancer.instagram) ?? ""}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <InstagramIcon className="size-4" />
+                          Instagram
+                        </a>
+                      </Button>
+                    ) : null}
                     {application.freelancer.whatsapp ? (
                       <Button asChild className="flex-1 sm:flex-none lg:w-full">
                         <a

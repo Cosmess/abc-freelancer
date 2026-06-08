@@ -51,6 +51,7 @@ export type FreelancerApplicationListing = JobApplication & {
   establishmentName: string;
   establishmentPhotoUrl: string | null;
   establishmentWhatsapp: string | null;
+  establishmentInstagram: string | null;
   specialtyName: string;
 };
 
@@ -61,6 +62,7 @@ export type EstablishmentApplicationListing = JobApplication & {
     fullName: string;
     email: string | null;
     whatsapp: string | null;
+    instagram: string | null;
     profilePhotoUrl: string | null;
     city: string | null;
     neighborhood: string | null;
@@ -101,18 +103,19 @@ async function getSpecialtyNames(ids: string[]) {
 
 async function getEstablishments(ids: string[]) {
   if (!ids.length) {
-    return new Map<string, { tradeName: string; whatsapp: string | null; profilePhotoUrl: string | null }>();
+    return new Map<string, { tradeName: string; whatsapp: string | null; instagram: string | null; profilePhotoUrl: string | null }>();
   }
 
   const { data, error } = await getSupabaseAdminClient()
     .from("EstablishmentProfile")
-    .select("id,tradeName,whatsapp,profilePhotoUrl")
+    .select("id,tradeName,whatsapp,instagram,profilePhotoUrl")
     .in("id", Array.from(new Set(ids)))
     .returns<
       Array<{
         id: string;
         tradeName: string;
         whatsapp: string | null;
+        instagram: string | null;
         profilePhotoUrl: string | null;
       }>
     >();
@@ -127,6 +130,7 @@ async function getEstablishments(ids: string[]) {
       {
         tradeName: item.tradeName,
         whatsapp: item.whatsapp,
+        instagram: item.instagram,
         profilePhotoUrl: item.profilePhotoUrl,
       },
     ]),
@@ -397,6 +401,8 @@ export async function getFreelancerApplications(freelancerId: string) {
         establishmentPhotoUrl: establishment?.profilePhotoUrl ?? null,
         establishmentWhatsapp:
           application.status === "ACCEPTED" ? establishment?.whatsapp ?? null : null,
+        establishmentInstagram:
+          application.status === "ACCEPTED" ? establishment?.instagram ?? null : null,
         specialtyName: specialtyNames.get(job.specialtyId) ?? "Especialidade",
       };
     })
@@ -433,7 +439,7 @@ export async function getApplicationsByJobForEstablishment(input: {
 
   const { data: freelancers, error: freelancersError } = await getSupabaseAdminClient()
     .from("FreelancerProfile")
-    .select("id,fullName,email,whatsapp,profilePhotoUrl,city,neighborhood,bio,experience")
+    .select("id,fullName,email,whatsapp,instagram,profilePhotoUrl,city,neighborhood,bio,experience")
     .in("id", freelancerIds)
     .returns<
       Array<{
@@ -441,6 +447,7 @@ export async function getApplicationsByJobForEstablishment(input: {
         fullName: string;
         email: string | null;
         whatsapp: string | null;
+        instagram: string | null;
         profilePhotoUrl: string | null;
         city: string | null;
         neighborhood: string | null;
@@ -497,6 +504,8 @@ export async function getApplicationsByJobForEstablishment(input: {
           freelancer: {
             ...freelancer,
             whatsapp: application.status === "ACCEPTED" ? freelancer.whatsapp : null,
+            // instagram is always visible — freelancer's social is public
+            instagram: freelancer.instagram,
             specialties: specialtiesByFreelancer.get(freelancer.id) ?? [],
           },
         };

@@ -8,6 +8,7 @@ export type FreelancerProfile = {
   fullName: string;
   cpf: string | null;
   whatsapp: string | null;
+  instagram: string | null;
   email: string | null;
   city: string | null;
   neighborhood: string | null;
@@ -42,6 +43,7 @@ export type EstablishmentProfile = {
   legalName: string | null;
   cnpj: string;
   whatsapp: string | null;
+  instagram: string | null;
   email: string | null;
   type: string | null;
   description: string | null;
@@ -152,6 +154,7 @@ export async function upsertFreelancerProfile(input: {
   fullName: string;
   cpf?: string | null;
   whatsapp?: string | null;
+  instagram?: string | null;
   email?: string | null;
   city?: string | null;
   neighborhood?: string | null;
@@ -167,6 +170,7 @@ export async function upsertFreelancerProfile(input: {
     fullName: input.fullName,
     cpf: input.cpf || null,
     whatsapp: input.whatsapp || null,
+    instagram: input.instagram || null,
     email: input.email || null,
     city: input.city || null,
     neighborhood: input.neighborhood || null,
@@ -314,6 +318,7 @@ export async function upsertEstablishmentProfile(input: {
   legalName?: string | null;
   cnpj: string;
   whatsapp?: string | null;
+  instagram?: string | null;
   email?: string | null;
   type?: string | null;
   description?: string | null;
@@ -333,6 +338,7 @@ export async function upsertEstablishmentProfile(input: {
     legalName: input.legalName || null,
     cnpj: input.cnpj,
     whatsapp: input.whatsapp || null,
+    instagram: input.instagram || null,
     email: input.email || null,
     type: input.type || null,
     description: input.description || null,

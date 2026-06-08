@@ -97,6 +97,7 @@ model EstablishmentProfile {
   legalName   String?
   cnpj        String        @unique
   whatsapp    String?
+  instagram   String?
   email       String?
   type        String?
   description String?
@@ -131,6 +132,7 @@ model FreelancerProfile {
   fullName        String
   cpf             String?       @unique
   whatsapp        String?
+  instagram       String?
   email           String?
   city            String?
   neighborhood    String?

@@ -48,6 +48,7 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
         <ProfileField label="Tipo de estabelecimento" name="type" value={profile?.type ?? ""} error={state.errors?.type} />
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
         <ProfileField label="WhatsApp" name="whatsapp" value={profile?.whatsapp ?? ""} error={state.errors?.whatsapp} />
+        <ProfileField label="Instagram (arroba)" name="instagram" value={profile?.instagram ?? ""} placeholder="@seuarroba" error={state.errors?.instagram} />
         <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} lookupCep />
         <ProfileField label="UF" name="state" value={profile?.state ?? ""} error={state.errors?.state} />
         <ProfileField label="Cidade" name="city" value={profile?.city ?? ""} error={state.errors?.city} />
@@ -88,6 +89,7 @@ function ProfileField({
   type = "text",
   required = false,
   lookupCep = false,
+  placeholder,
 }: {
   label: string;
   name: string;
@@ -96,6 +98,7 @@ function ProfileField({
   type?: string;
   required?: boolean;
   lookupCep?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className="grid gap-1.5 text-sm font-medium">
@@ -106,6 +109,7 @@ function ProfileField({
         type={type}
         defaultValue={value}
         required={required}
+        placeholder={placeholder}
         onBlur={(event) => {
           if (lookupCep) {
             void fillAddressFromCep(event.currentTarget.form!, event.currentTarget.value);

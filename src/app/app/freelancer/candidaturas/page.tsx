@@ -3,11 +3,13 @@ import { ArrowLeft, ClipboardList, MapPin, MessageCircle } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { InstagramIcon } from "@/components/ui/instagram-icon";
 import {
   formatJobAddress,
   formatJobSchedule,
   getFreelancerToEstablishmentMessage,
   getApplicationStatusLabel,
+  getInstagramUrl,
   getJobStatusLabel,
   getJobMapsUrl,
   getWhatsAppUrl,
@@ -110,6 +112,18 @@ export default async function FreelancerApplicationsPage() {
                         <a href={getJobMapsUrl(application.job) ?? ""} target="_blank" rel="noreferrer">
                           <MapPin className="size-4" />
                           Abrir no Maps
+                        </a>
+                      </Button>
+                    ) : null}
+                    {application.establishmentInstagram ? (
+                      <Button asChild variant="outline">
+                        <a
+                          href={getInstagramUrl(application.establishmentInstagram) ?? ""}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <InstagramIcon className="size-4" />
+                          Instagram
                         </a>
                       </Button>
                     ) : null}

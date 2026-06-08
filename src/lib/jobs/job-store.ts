@@ -41,6 +41,10 @@ export type JobListing = JobPost & {
   applicationStatus?: string | null;
 };
 
+export type EstablishmentJobPost = JobPost & {
+  acceptedApplicationCount: number;
+};
+
 export type FreelancerApplicationListing = JobApplication & {
   job: JobPost;
   establishmentName: string;
@@ -115,6 +119,29 @@ async function getEstablishments(ids: string[]) {
   );
 }
 
+async function getAcceptedApplicationCounts(jobPostIds: string[]) {
+  if (!jobPostIds.length) return new Map<string, number>();
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from("JobApplication")
+    .select("jobPostId")
+    .in("jobPostId", Array.from(new Set(jobPostIds)))
+    .eq("status", "ACCEPTED")
+    .returns<Array<{ jobPostId: string }>>();
+
+  if (error) {
+    throw error;
+  }
+
+  const counts = new Map<string, number>();
+
+  (data ?? []).forEach((item) => {
+    counts.set(item.jobPostId, (counts.get(item.jobPostId) ?? 0) + 1);
+  });
+
+  return counts;
+}
+
 export async function getJobPostById(jobPostId: string) {
   const { data, error } = await getSupabaseAdminClient()
     .from("JobPost")
@@ -141,7 +168,13 @@ export async function getJobPostsByEstablishment(establishmentId: string) {
     throw error;
   }
 
-  return data ?? [];
+  const jobs = data ?? [];
+  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+
+  return jobs.map((job) => ({
+    ...job,
+    acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+  })) satisfies EstablishmentJobPost[];
 }
 
 export async function getOpenJobPosts(filters: OpenJobFilters = {}) {
@@ -490,15 +523,51 @@ export async function updateApplicationStatusForEstablishment(input: {
   if (error) {
     throw error;
   }
+
+  if (input.status === "ACCEPTED") {
+    const acceptedCounts = await getAcceptedApplicationCounts([job.id]);
+
+    if ((acceptedCounts.get(job.id) ?? 0) >= job.quantity) {
+      await closeJobPostForEstablishment({
+        jobPostId: job.id,
+        establishmentId: input.establishmentId,
+      });
+    }
+  }
 }
 
 export async function deleteJobPostForEstablishment(input: {
   jobPostId: string;
   establishmentId: string;
 }) {
+  const acceptedCounts = await getAcceptedApplicationCounts([input.jobPostId]);
+
+  if ((acceptedCounts.get(input.jobPostId) ?? 0) > 0) {
+    await closeJobPostForEstablishment(input);
+    return;
+  }
+
   const { error } = await getSupabaseAdminClient()
     .from("JobPost")
     .delete()
+    .eq("id", input.jobPostId)
+    .eq("establishmentId", input.establishmentId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function closeJobPostForEstablishment(input: {
+  jobPostId: string;
+  establishmentId: string;
+}) {
+  const { error } = await getSupabaseAdminClient()
+    .from("JobPost")
+    .update({
+      status: "FINISHED",
+      updatedAt: new Date().toISOString(),
+    })
     .eq("id", input.jobPostId)
     .eq("establishmentId", input.establishmentId);
 

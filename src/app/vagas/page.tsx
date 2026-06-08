@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UserRole } from "@/generated/prisma/client";
 import {
   formatJobAddress,
+  formatJobSchedule,
   getApplicationStatusLabel,
   getJobMapsUrl,
 } from "@/lib/jobs/formatters";
@@ -114,8 +115,7 @@ export default async function JobsPage({ searchParams }: Props) {
                       {job.establishmentName} - {job.specialtyName}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
-                      {job.startTime} as {job.endTime}
+                      {formatJobSchedule(job)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Endereco: {formatJobAddress(job)}
@@ -123,6 +123,11 @@ export default async function JobsPage({ searchParams }: Props) {
                     {job.description ? (
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
                         {job.description}
+                      </p>
+                    ) : null}
+                    {job.requirements ? (
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                        Requisitos: {job.requirements}
                       </p>
                     ) : null}
                   </div>

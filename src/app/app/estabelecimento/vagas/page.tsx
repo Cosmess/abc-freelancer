@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ClipboardList, LockKeyhole, Plus, Trash2, Users } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { getJobStatusLabel } from "@/lib/jobs/formatters";
 import { getJobPostsByEstablishment } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
-import { deleteJobPostAction } from "@/server/actions/jobs";
+import { closeJobPostAction, deleteJobPostAction } from "@/server/actions/jobs";
 import { requireEstablishment } from "@/server/guards/auth";
 
 export default async function EstablishmentJobsPage() {
@@ -60,6 +60,11 @@ export default async function EstablishmentJobsPage() {
                       R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
                       {job.quantity} vaga(s) - {getJobStatusLabel(job.status)}
                     </p>
+                    {job.acceptedApplicationCount > 0 ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {job.acceptedApplicationCount} aceite(s). Esta vaga nao pode ser excluida.
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline">
@@ -68,12 +73,22 @@ export default async function EstablishmentJobsPage() {
                         Candidatos
                       </Link>
                     </Button>
-                    <form action={deleteJobPostAction.bind(null, job.id)}>
-                      <Button variant="destructive" type="submit">
-                        <Trash2 className="size-4" />
-                        Excluir
-                      </Button>
-                    </form>
+                    {job.status !== "FINISHED" ? (
+                      <form action={closeJobPostAction.bind(null, job.id)}>
+                        <Button variant="outline" type="submit">
+                          <LockKeyhole className="size-4" />
+                          Encerrar
+                        </Button>
+                      </form>
+                    ) : null}
+                    {job.acceptedApplicationCount === 0 ? (
+                      <form action={deleteJobPostAction.bind(null, job.id)}>
+                        <Button variant="destructive" type="submit">
+                          <Trash2 className="size-4" />
+                          Excluir
+                        </Button>
+                      </form>
+                    ) : null}
                   </div>
                 </article>
               ))}

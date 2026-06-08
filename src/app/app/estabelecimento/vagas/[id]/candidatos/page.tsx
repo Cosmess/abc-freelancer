@@ -1,9 +1,16 @@
 import Link from "next/link";
-import { ArrowLeft, Check, ClipboardList, X } from "lucide-react";
+import { ArrowLeft, Check, ClipboardList, MessageCircle, X } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
-import { getApplicationStatusLabel } from "@/lib/jobs/formatters";
+import {
+  formatJobAddress,
+  formatJobSchedule,
+  getApplicationStatusLabel,
+  getEstablishmentToFreelancerMessage,
+  getJobStatusLabel,
+  getWhatsAppUrl,
+} from "@/lib/jobs/formatters";
 import { getApplicationsByJobForEstablishment } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
 import {
@@ -51,6 +58,10 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Veja o perfil dos freelancers e aceite uma candidatura para
               liberar o WhatsApp entre as partes.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              {formatJobSchedule(job)} - {formatJobAddress(job)} -{" "}
+              {getJobStatusLabel(job.status)}
             </p>
           </div>
           <Button asChild variant="outline">
@@ -101,6 +112,26 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                     ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2 lg:min-w-48 lg:justify-end">
+                    {application.freelancer.whatsapp ? (
+                      <Button asChild>
+                        <a
+                          href={
+                            getWhatsAppUrl(
+                              application.freelancer.whatsapp,
+                              getEstablishmentToFreelancerMessage({
+                                establishmentName: profile.tradeName,
+                                job,
+                              }),
+                            ) ?? ""
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <MessageCircle className="size-4" />
+                          WhatsApp
+                        </a>
+                      </Button>
+                    ) : null}
                     <form action={acceptApplicationAction.bind(null, application.id, job.id)}>
                       <Button type="submit">
                         <Check className="size-4" />

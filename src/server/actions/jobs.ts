@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import {
   createJobApplication,
   createJobPost,
+  closeJobPostForEstablishment,
   deleteJobPostForEstablishment,
   updateApplicationStatusForEstablishment,
 } from "@/lib/jobs/job-store";
@@ -94,6 +95,25 @@ export async function deleteJobPostAction(jobPostId: string) {
 
   revalidatePath("/vagas");
   revalidatePath("/app/estabelecimento/vagas");
+  revalidatePath("/app/freelancer/candidaturas");
+}
+
+export async function closeJobPostAction(jobPostId: string) {
+  const user = await requireEstablishment();
+  const profile = await getEstablishmentProfile(user.id);
+
+  if (!profile) {
+    redirect("/app/estabelecimento/perfil");
+  }
+
+  await closeJobPostForEstablishment({
+    jobPostId,
+    establishmentId: profile.id,
+  });
+
+  revalidatePath("/vagas");
+  revalidatePath("/app/estabelecimento/vagas");
+  revalidatePath("/app/freelancer/candidaturas");
 }
 
 export async function acceptApplicationAction(applicationId: string, jobPostId: string) {

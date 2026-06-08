@@ -1,12 +1,16 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, MapPin } from "lucide-react";
+import { ArrowLeft, ClipboardList, MapPin, MessageCircle } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import {
   formatJobAddress,
+  formatJobSchedule,
+  getFreelancerToEstablishmentMessage,
   getApplicationStatusLabel,
+  getJobStatusLabel,
   getJobMapsUrl,
+  getWhatsAppUrl,
 } from "@/lib/jobs/formatters";
 import { getFreelancerApplications } from "@/lib/jobs/job-store";
 import { getFreelancerProfile } from "@/lib/profiles/profile-store";
@@ -50,12 +54,21 @@ export default async function FreelancerApplicationsPage() {
                       {application.establishmentName} - {application.specialtyName}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {new Date(application.job.workDate).toLocaleDateString("pt-BR")} das{" "}
-                      {application.job.startTime} as {application.job.endTime}
+                      {formatJobSchedule(application.job)}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Endereco: {formatJobAddress(application.job)}
                     </p>
+                    {application.job.description ? (
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                        {application.job.description}
+                      </p>
+                    ) : null}
+                    {application.job.requirements ? (
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                        Requisitos: {application.job.requirements}
+                      </p>
+                    ) : null}
                     {application.establishmentWhatsapp ? (
                       <p className="mt-2 text-sm font-medium">
                         WhatsApp liberado: {application.establishmentWhatsapp}
@@ -64,13 +77,36 @@ export default async function FreelancerApplicationsPage() {
                   </div>
                   <div className="grid gap-2 md:min-w-44">
                     <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                      {getApplicationStatusLabel(application.status)}
+                      Candidatura: {getApplicationStatusLabel(application.status)}
+                    </div>
+                    <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
+                      Vaga: {getJobStatusLabel(application.job.status)}
                     </div>
                     {getJobMapsUrl(application.job) ? (
                       <Button asChild variant="outline">
                         <a href={getJobMapsUrl(application.job) ?? ""} target="_blank" rel="noreferrer">
                           <MapPin className="size-4" />
                           Abrir no Maps
+                        </a>
+                      </Button>
+                    ) : null}
+                    {application.establishmentWhatsapp ? (
+                      <Button asChild>
+                        <a
+                          href={
+                            getWhatsAppUrl(
+                              application.establishmentWhatsapp,
+                              getFreelancerToEstablishmentMessage({
+                                freelancerName: user.name,
+                                jobTitle: application.job.title,
+                              }),
+                            ) ?? ""
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <MessageCircle className="size-4" />
+                          Chamar no WhatsApp
                         </a>
                       </Button>
                     ) : null}

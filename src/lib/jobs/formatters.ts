@@ -46,3 +46,36 @@ export function getJobMapsUrl(job: JobPost) {
 
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
+
+export function formatJobSchedule(job: JobPost) {
+  return `${new Date(job.workDate).toLocaleDateString("pt-BR")} das ${job.startTime} as ${job.endTime}`;
+}
+
+export function getWhatsAppUrl(phone: string | null | undefined, message: string) {
+  const digits = phone?.replace(/\D/g, "") ?? "";
+
+  if (!digits) return null;
+
+  const number = digits.startsWith("55") ? digits : `55${digits}`;
+
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}
+
+export function getFreelancerToEstablishmentMessage(input: {
+  freelancerName: string;
+  jobTitle: string;
+}) {
+  return `Ola me chamo: ${input.freelancerName}, estou entrando em contato referente a vaga de ${input.jobTitle} postada no ABC Freelancer.`;
+}
+
+export function getEstablishmentToFreelancerMessage(input: {
+  establishmentName: string;
+  job: JobPost;
+}) {
+  return [
+    `Ola somos do ${input.establishmentName}, seu perfil chamou a atencao para a vaga ${input.job.title}.`,
+    `Dia e horario: ${formatJobSchedule(input.job)}.`,
+    `Endereco: ${formatJobAddress(input.job)}.`,
+    `Valor: R$ ${(input.job.paymentValue / 100).toFixed(2).replace(".", ",")}.`,
+  ].join(" ");
+}

@@ -40,23 +40,22 @@ export default async function JobsPage({ searchParams }: Props) {
   ]);
 
   return (
-    <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">
-      <section className="mx-auto grid max-w-6xl gap-6">
+    <main className="min-h-screen bg-muted/30 text-foreground">
+      <section className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-5">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <Link href="/" className="text-sm font-medium text-muted-foreground">
+            <Link href="/" className="text-sm font-medium text-primary">
               ABC Freelancer
             </Link>
-            <h1 className="mt-4 text-3xl font-semibold tracking-normal">
-              Vagas
+            <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Vagas abertas
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Busque oportunidades abertas por localidade e especialidade. O
-              contato do estabelecimento so aparece depois que a candidatura for
-              aceita.
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Busque oportunidades por localidade e especialidade. O contato so
+              aparece apos aceite da candidatura.
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href={user.role === UserRole.FREELANCER ? "/app/freelancer" : "/app/estabelecimento"}>
               <Search className="size-4" />
               Voltar ao painel
@@ -64,29 +63,32 @@ export default async function JobsPage({ searchParams }: Props) {
           </Button>
         </div>
 
-        <form className="grid gap-3 rounded-md border bg-background p-4 shadow-sm md:grid-cols-[1fr_1fr_1fr_auto]" action="/vagas">
-          <label className="grid gap-2 text-sm font-medium">
+        <form
+          className="grid gap-3 rounded-lg border bg-card p-4 shadow-sm sm:grid-cols-2 md:grid-cols-[1fr_1fr_1fr_auto]"
+          action="/vagas"
+        >
+          <label className="grid gap-1.5 text-sm font-medium">
             Cidade
             <input
-              className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
               name="cidade"
               defaultValue={params.cidade ?? ""}
-              placeholder="Ex: Sao Paulo"
+              placeholder="Ex: Santo Andre"
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium">
+          <label className="grid gap-1.5 text-sm font-medium">
             Bairro
             <input
-              className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
               name="bairro"
               defaultValue={params.bairro ?? ""}
               placeholder="Ex: Centro"
             />
           </label>
-          <label className="grid gap-2 text-sm font-medium">
+          <label className="grid gap-1.5 text-sm font-medium">
             Especialidade
             <select
-              className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
               name="especialidade"
               defaultValue={params.especialidade ?? ""}
             >
@@ -98,19 +100,19 @@ export default async function JobsPage({ searchParams }: Props) {
               ))}
             </select>
           </label>
-          <Button className="self-end" type="submit">
+          <Button className="h-10 w-full self-end md:w-auto" type="submit">
             <Search className="size-4" />
             Buscar
           </Button>
         </form>
 
-        <div className="rounded-md border bg-background shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm">
           {jobs.length ? (
-            <div className="divide-y">
+            <div className="divide-y divide-border">
               {jobs.map((job) => (
-                <article key={job.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-start">
+                <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-start">
                   <div className="flex gap-4">
-                    <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
                       {job.establishmentPhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={job.establishmentPhotoUrl} alt="" className="size-full object-cover" />
@@ -118,37 +120,38 @@ export default async function JobsPage({ searchParams }: Props) {
                         job.establishmentName.slice(0, 1).toUpperCase()
                       )}
                     </div>
-                    <div>
-                      <h2 className="font-medium">{job.title}</h2>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold">{job.title}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {job.establishmentName} - {job.specialtyName}
+                        {job.establishmentName} — {job.specialtyName}
                       </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatJobSchedule(job)}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Endereco: {formatJobAddress(job)}
-                    </p>
-                    {job.description ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        {job.description}
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatJobSchedule(job)}
                       </p>
-                    ) : null}
-                    {job.requirements ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        Requisitos: {job.requirements}
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatJobAddress(job)}
                       </p>
-                    ) : null}
+                      {job.description ? (
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                          {job.description}
+                        </p>
+                      ) : null}
+                      {job.requirements ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          <span className="font-medium text-foreground">Requisitos:</span>{" "}
+                          {job.requirements}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
-                  <div className="grid gap-2 text-sm text-muted-foreground lg:min-w-48">
-                    <div>
-                      R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
+                  <div className="grid gap-2 lg:min-w-48">
+                    <div className="rounded-md bg-muted/60 px-3 py-2 text-sm font-medium text-foreground">
+                      R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} —{" "}
                       {job.quantity} vaga(s)
                     </div>
                     {user.role === UserRole.FREELANCER ? (
                       job.applicationStatus ? (
-                        <div className="rounded-md border px-3 py-2 text-xs">
+                        <div className="rounded-md border px-3 py-2 text-center text-xs text-muted-foreground">
                           Candidatura: {getApplicationStatusLabel(job.applicationStatus)}
                         </div>
                       ) : (
@@ -173,9 +176,9 @@ export default async function JobsPage({ searchParams }: Props) {
               ))}
             </div>
           ) : (
-            <div className="p-5">
+            <div className="p-6">
               <BriefcaseBusiness className="mb-4 size-6 text-muted-foreground" />
-              <h2 className="font-medium">Nenhuma vaga aberta</h2>
+              <h2 className="font-semibold">Nenhuma vaga aberta</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Ajuste os filtros ou aguarde novas vagas dos estabelecimentos.
               </p>

@@ -32,8 +32,8 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
     return (
       <main className="min-h-screen bg-muted/30 text-foreground">
         <AppHeader title="Candidatos" userName={user.name} />
-        <section className="mx-auto max-w-6xl px-5 py-8">
-          <div className="rounded-md border bg-background p-5">
+        <section className="mx-auto max-w-6xl px-4 py-8">
+          <div className="rounded-lg border bg-card p-5 text-card-foreground">
             Complete o perfil do estabelecimento antes de gerenciar candidatos.
           </div>
         </section>
@@ -49,22 +49,21 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
       <AppHeader title="Candidatos" userName={user.name} />
-      <section className="mx-auto grid max-w-6xl gap-5 px-5 py-8">
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 py-6 sm:px-5 sm:py-8">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h1 className="text-2xl font-semibold tracking-normal">
+            <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">
               {job.title}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Veja o perfil dos freelancers e aceite uma candidatura para
-              liberar o WhatsApp entre as partes.
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Aceite uma candidatura para liberar o WhatsApp entre as partes.
             </p>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {formatJobSchedule(job)} - {formatJobAddress(job)} -{" "}
+            <p className="mt-1 text-sm text-muted-foreground">
+              {formatJobSchedule(job)} — {formatJobAddress(job)} —{" "}
               {getJobStatusLabel(job.status)}
             </p>
           </div>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/app/estabelecimento/vagas">
               <ArrowLeft className="size-4" />
               Voltar para vagas
@@ -72,14 +71,14 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
           </Button>
         </div>
 
-        <div className="rounded-md border bg-background shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm">
           {applications.length ? (
-            <div className="divide-y">
+            <div className="divide-y divide-border">
               {applications.map((application) => (
-                <article key={application.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto]">
+                <article key={application.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto]">
                   <div>
                     <div className="flex gap-4">
-                      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
                         {application.freelancer.profilePhotoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -91,10 +90,19 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                           application.freelancer.fullName.slice(0, 1).toUpperCase()
                         )}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="font-medium">{application.freelancer.fullName}</h2>
-                          <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                          <h2 className="font-semibold">{application.freelancer.fullName}</h2>
+                          <span
+                            className={[
+                              "rounded-md px-2 py-0.5 text-xs font-medium",
+                              application.status === "ACCEPTED"
+                                ? "bg-primary/20 text-primary"
+                                : application.status === "REJECTED"
+                                  ? "bg-destructive/20 text-destructive-foreground"
+                                  : "bg-muted text-muted-foreground border border-border",
+                            ].join(" ")}
+                          >
                             {getApplicationStatusLabel(application.status)}
                           </span>
                         </div>
@@ -107,29 +115,31 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                       </div>
                     </div>
                     {application.freelancer.specialties.length ? (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Especialidades: {application.freelancer.specialties.join(", ")}
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Especialidades:</span>{" "}
+                        {application.freelancer.specialties.join(", ")}
                       </p>
                     ) : null}
                     {application.freelancer.bio ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
                         {application.freelancer.bio}
                       </p>
                     ) : null}
                     {application.freelancer.experience ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        Experiencia: {application.freelancer.experience}
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                        <span className="font-medium text-foreground">Experiencia:</span>{" "}
+                        {application.freelancer.experience}
                       </p>
                     ) : null}
                     {application.freelancer.whatsapp ? (
-                      <p className="mt-2 text-sm font-medium">
+                      <p className="mt-2 text-sm font-medium text-primary">
                         WhatsApp liberado: {application.freelancer.whatsapp}
                       </p>
                     ) : null}
                   </div>
-                  <div className="flex flex-wrap gap-2 lg:min-w-48 lg:justify-end">
+                  <div className="flex flex-wrap gap-2 sm:flex-row lg:min-w-52 lg:flex-col lg:items-end">
                     {application.freelancer.whatsapp ? (
-                      <Button asChild>
+                      <Button asChild className="flex-1 sm:flex-none lg:w-full">
                         <a
                           href={
                             getWhatsAppUrl(
@@ -148,26 +158,36 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
                         </a>
                       </Button>
                     ) : null}
-                    <form action={acceptApplicationAction.bind(null, application.id, job.id)}>
-                      <Button type="submit">
-                        <Check className="size-4" />
-                        Aceitar
-                      </Button>
-                    </form>
-                    <form action={rejectApplicationAction.bind(null, application.id, job.id)}>
-                      <Button type="submit" variant="destructive">
-                        <X className="size-4" />
-                        Recusar
-                      </Button>
-                    </form>
+                    {application.status !== "ACCEPTED" ? (
+                      <form
+                        action={acceptApplicationAction.bind(null, application.id, job.id)}
+                        className="flex-1 sm:flex-none lg:w-full"
+                      >
+                        <Button type="submit" className="w-full">
+                          <Check className="size-4" />
+                          Aceitar
+                        </Button>
+                      </form>
+                    ) : null}
+                    {application.status !== "REJECTED" ? (
+                      <form
+                        action={rejectApplicationAction.bind(null, application.id, job.id)}
+                        className="flex-1 sm:flex-none lg:w-full"
+                      >
+                        <Button type="submit" variant="destructive" className="w-full">
+                          <X className="size-4" />
+                          Recusar
+                        </Button>
+                      </form>
+                    ) : null}
                   </div>
                 </article>
               ))}
             </div>
           ) : (
-            <div className="p-5">
+            <div className="p-6">
               <ClipboardList className="mb-4 size-6 text-muted-foreground" />
-              <h2 className="font-medium">Nenhum candidato ainda</h2>
+              <h2 className="font-semibold">Nenhum candidato ainda</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Quando freelancers se candidatarem, os perfis aparecem aqui.
               </p>

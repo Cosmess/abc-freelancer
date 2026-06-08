@@ -16,25 +16,25 @@ export default async function EstablishmentJobsPage() {
 
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
-      <AppHeader title="Vagas do estabelecimento" userName={user.name} />
-      <section className="mx-auto grid max-w-6xl gap-5 px-5 py-8">
+      <AppHeader title="Vagas" userName={user.name} />
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 py-6 sm:px-5 sm:py-8">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div>
-            <h1 className="text-2xl font-semibold tracking-normal">
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
               Minhas vagas
             </h1>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
               Crie vagas, acompanhe candidatos e exclua oportunidades encerradas.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/app/estabelecimento">
                 <ArrowLeft className="size-4" />
                 Voltar ao painel
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/app/estabelecimento/vagas/nova">
                 <Plus className="size-4" />
                 Nova vaga
@@ -43,13 +43,13 @@ export default async function EstablishmentJobsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border bg-background shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm">
           {jobs.length ? (
-            <div className="divide-y">
+            <div className="divide-y divide-border">
               {jobs.map((job) => (
-                <article key={job.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="flex gap-4">
-                    <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
                       {profile?.profilePhotoUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={profile.profilePhotoUrl} alt="" className="size-full object-cover" />
@@ -57,27 +57,28 @@ export default async function EstablishmentJobsPage() {
                         profile?.tradeName.slice(0, 1).toUpperCase() ?? "E"
                       )}
                     </div>
-                    <div>
-                      <h2 className="font-medium">{job.title}</h2>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold">{job.title}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {job.city}
-                        {job.neighborhood ? `, ${job.neighborhood}` : ""} -{" "}
+                        {job.neighborhood ? `, ${job.neighborhood}` : ""} —{" "}
                         {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
                         {job.startTime} as {job.endTime}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
-                        {job.quantity} vaga(s) - {getJobStatusLabel(job.status)}
+                        R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} —{" "}
+                        {job.quantity} vaga(s) —{" "}
+                        <span className="font-medium text-foreground">{getJobStatusLabel(job.status)}</span>
                       </p>
                       {job.acceptedApplicationCount > 0 ? (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {job.acceptedApplicationCount} aceite(s). Esta vaga nao pode ser excluida.
+                        <p className="mt-1 text-xs text-primary/80">
+                          {job.acceptedApplicationCount} aceite(s) — nao pode ser excluida.
                         </p>
                       ) : null}
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" size="sm">
                       <Link href={`/app/estabelecimento/vagas/${job.id}/candidatos`}>
                         <Users className="size-4" />
                         Candidatos
@@ -85,7 +86,7 @@ export default async function EstablishmentJobsPage() {
                     </Button>
                     {job.status !== "FINISHED" ? (
                       <form action={closeJobPostAction.bind(null, job.id)}>
-                        <Button variant="outline" type="submit">
+                        <Button variant="outline" size="sm" type="submit">
                           <LockKeyhole className="size-4" />
                           Encerrar
                         </Button>
@@ -93,7 +94,7 @@ export default async function EstablishmentJobsPage() {
                     ) : null}
                     {job.acceptedApplicationCount === 0 ? (
                       <form action={deleteJobPostAction.bind(null, job.id)}>
-                        <Button variant="destructive" type="submit">
+                        <Button variant="destructive" size="sm" type="submit">
                           <Trash2 className="size-4" />
                           Excluir
                         </Button>
@@ -104,12 +105,18 @@ export default async function EstablishmentJobsPage() {
               ))}
             </div>
           ) : (
-            <div className="p-5">
+            <div className="p-6">
               <ClipboardList className="mb-4 size-6 text-muted-foreground" />
-              <h2 className="font-medium">Nenhuma vaga criada</h2>
+              <h2 className="font-semibold">Nenhuma vaga criada</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 Complete o perfil do estabelecimento e crie a primeira vaga.
               </p>
+              <Button asChild className="mt-4">
+                <Link href="/app/estabelecimento/vagas/nova">
+                  <Plus className="size-4" />
+                  Criar primeira vaga
+                </Link>
+              </Button>
             </div>
           )}
         </div>

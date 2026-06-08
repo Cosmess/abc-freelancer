@@ -21,17 +21,33 @@ const steps = [
   "Use a area logada para buscar vagas, catalogos e candidaturas.",
 ];
 
+const features = [
+  {
+    title: "Trial de 7 dias",
+    description: "Comece sem pagamento enquanto valida o fluxo.",
+    Icon: Clock,
+  },
+  {
+    title: "Acesso protegido",
+    description: "Catalogo, busca e areas operacionais ficam logados.",
+    Icon: ShieldCheck,
+  },
+  {
+    title: "Contato controlado",
+    description: "Telefone e WhatsApp so entram no fluxo apos aceite.",
+    Icon: CheckCircle2,
+  },
+];
+
 function getProfilePath(role: UserRole) {
   if (role === UserRole.ESTABLISHMENT) return "/app/estabelecimento/perfil";
   if (role === UserRole.ADMIN) return "/admin";
-
   return "/app/freelancer/perfil";
 }
 
 function getDashboardPath(role: UserRole) {
   if (role === UserRole.ESTABLISHMENT) return "/app/estabelecimento";
   if (role === UserRole.ADMIN) return "/admin";
-
   return "/app/freelancer";
 }
 
@@ -40,32 +56,33 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Link href="/" className="font-semibold">
-            ABC Freelancer
+      <header className="sticky top-0 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-5">
+          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
+            <span className="text-primary">ABC</span>
+            <span className="text-foreground">Freelancer</span>
           </Link>
           <nav className="flex items-center gap-2">
             {user ? (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href={getDashboardPath(user.role)}>Painel</Link>
                 </Button>
                 <form action={logoutAction}>
-                  <Button type="submit" variant="outline">
+                  <Button type="submit" variant="outline" size="sm">
                     Sair
                   </Button>
                 </form>
               </>
             ) : (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href="/login">Entrar</Link>
                 </Button>
-                <Button asChild>
+                <Button size="sm" asChild>
                   <Link href="/cadastro">
                     Criar conta
-                    <ArrowRight className="size-4" />
+                    <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>
               </>
@@ -74,33 +91,34 @@ export default async function Home() {
         </div>
       </header>
 
-      <section className="border-b bg-muted/30">
-        <div className="mx-auto grid min-h-[70vh] max-w-6xl content-center gap-10 px-5 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+      <section className="relative border-b border-border/60 bg-card/40">
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-5 sm:py-16 lg:min-h-[72vh] lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-20">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-md border bg-background px-3 py-1 text-sm text-muted-foreground">
-              <MapPin className="size-4" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted px-3 py-1 text-sm text-muted-foreground">
+              <MapPin className="size-3.5 text-primary" />
               ABCD Paulista
             </div>
             <div className="space-y-4">
-              <h1 className="max-w-3xl text-4xl font-semibold tracking-normal sm:text-5xl">
-                Contrate diaristas locais ou encontre trabalhos por data.
+              <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                Contrate profissionais locais ou{" "}
+                <span className="text-primary">encontre trabalhos</span> por data.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                O ABC Freelancer conecta bares, restaurantes, clinicas, eventos
-                e negocios locais com profissionais disponiveis para diarias,
-                turnos e demandas pontuais.
+              <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+                O ABC Freelancer conecta bares, restaurantes, clinicas, eventos e
+                negocios locais com profissionais disponiveis para diarias, turnos
+                e demandas pontuais.
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
               {user ? (
                 <>
-                  <Button className="h-11" asChild>
+                  <Button size="lg" className="h-11 w-full sm:w-auto" asChild>
                     <Link href={getDashboardPath(user.role)}>
                       <BriefcaseBusiness className="size-4" />
                       Acessar painel
                     </Link>
                   </Button>
-                  <Button className="h-11" variant="outline" asChild>
+                  <Button size="lg" variant="outline" className="h-11 w-full sm:w-auto" asChild>
                     <Link href={getProfilePath(user.role)}>
                       <UserRound className="size-4" />
                       Meu perfil
@@ -109,13 +127,13 @@ export default async function Home() {
                 </>
               ) : (
                 <>
-                  <Button className="h-11" asChild>
+                  <Button size="lg" className="h-11 w-full sm:w-auto" asChild>
                     <Link href="/cadastro/freelancer">
                       <UserRound className="size-4" />
                       Sou freelancer
                     </Link>
                   </Button>
-                  <Button className="h-11" variant="outline" asChild>
+                  <Button size="lg" variant="outline" className="h-11 w-full sm:w-auto" asChild>
                     <Link href="/cadastro/estabelecimento">
                       <Building2 className="size-4" />
                       Tenho estabelecimento
@@ -128,45 +146,46 @@ export default async function Home() {
 
           <div className="grid gap-3">
             {steps.map((step, index) => (
-              <article key={step} className="rounded-md border bg-background p-4 shadow-sm">
-                <div className="mb-3 flex size-8 items-center justify-center rounded-md bg-muted text-sm font-medium">
+              <article
+                key={step}
+                className="flex items-start gap-4 rounded-lg border border-border/60 bg-card p-4 shadow-sm"
+              >
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/15 text-sm font-bold text-primary">
                   {index + 1}
                 </div>
-                <p className="text-sm leading-6 text-muted-foreground">{step}</p>
+                <p className="pt-1 text-sm leading-6 text-muted-foreground">{step}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-4 px-5 py-10 md:grid-cols-3">
-        {[
-          ["Trial de 7 dias", "Comece sem pagamento enquanto valida o fluxo.", Clock],
-          ["Acesso protegido", "Catalogo, busca e areas operacionais ficam logados.", ShieldCheck],
-          ["Contato controlado", "Telefone e WhatsApp so entram no fluxo apos aceite.", CheckCircle2],
-        ].map(([title, description, Icon]) => (
-          <article key={title as string} className="rounded-md border bg-background p-4">
-            <Icon className="mb-4 size-5 text-muted-foreground" />
-            <h2 className="font-medium">{title as string}</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {description as string}
-            </p>
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 sm:px-5 md:grid-cols-3">
+        {features.map(({ title, description, Icon }) => (
+          <article
+            key={title}
+            className="rounded-lg border border-border/60 bg-card p-5 shadow-sm"
+          >
+            <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/15">
+              <Icon className="size-5 text-primary" />
+            </div>
+            <h2 className="font-semibold">{title}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
           </article>
         ))}
       </section>
 
-      <section className="border-t bg-muted/30 px-5 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <section className="border-t border-border/60 bg-card/40 px-4 py-10 sm:px-5">
+        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-6 sm:flex-row sm:items-center">
           <div>
-            <h2 className="text-xl font-semibold tracking-normal">
+            <h2 className="text-xl font-bold tracking-tight">
               Busca e catalogo ficam dentro da area logada.
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Entre para acessar vagas, estabelecimentos e proximas ferramentas
-              operacionais.
+              Entre para acessar vagas, estabelecimentos e proximas ferramentas operacionais.
             </p>
           </div>
-          <Button asChild>
+          <Button size="lg" className="w-full sm:w-auto" asChild>
             <Link href={user ? getDashboardPath(user.role) : "/login"}>
               <BriefcaseBusiness className="size-4" />
               Acessar area logada
@@ -174,6 +193,12 @@ export default async function Home() {
           </Button>
         </div>
       </section>
+
+      <footer className="border-t border-border/40 px-4 py-6 sm:px-5">
+        <div className="mx-auto max-w-6xl text-center text-xs text-muted-foreground">
+          &copy; {new Date().getFullYear()} ABC Freelancer — ABCD Paulista
+        </div>
+      </footer>
     </main>
   );
 }

@@ -133,6 +133,7 @@ export async function acceptApplicationAction(applicationId: string, jobPostId: 
   revalidatePath("/vagas");
   revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
   revalidatePath("/app/freelancer/candidaturas");
+  redirect(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
 }
 
 export async function rejectApplicationAction(applicationId: string, jobPostId: string) {
@@ -152,4 +153,5 @@ export async function rejectApplicationAction(applicationId: string, jobPostId: 
   revalidatePath("/vagas");
   revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
   revalidatePath("/app/freelancer/candidaturas");
+  redirect(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
 }

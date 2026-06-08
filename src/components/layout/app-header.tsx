@@ -10,10 +10,11 @@ type AppHeaderProps = {
 
 export function AppHeader({ title, userName }: AppHeaderProps) {
   return (
-    <header className="border-b bg-background">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
-        <Link href="/" className="font-semibold">
-          ABC Freelancer
+    <header className="sticky top-0 z-10 border-b border-border/60 bg-background/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-5">
+        <Link href="/" className="flex items-center gap-1.5 font-bold tracking-tight">
+          <span className="text-primary">ABC</span>
+          <span className="text-foreground">Freelancer</span>
         </Link>
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
@@ -21,7 +22,7 @@ export function AppHeader({ title, userName }: AppHeaderProps) {
             <p className="text-xs text-muted-foreground">{userName}</p>
           </div>
           <form action={logoutAction}>
-            <Button variant="outline" type="submit">
+            <Button variant="outline" size="sm" type="submit">
               Sair
             </Button>
           </form>

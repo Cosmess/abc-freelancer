@@ -952,10 +952,10 @@ Observacao:
 - [x] Scaffold Next.js criado
 - [x] Dependencias instaladas
 - [x] Prisma configurado
-- [x] Schema Prisma criado
+- [x] Schema Prisma criado e aplicado no banco real (`npm run db:push`)
 - [x] Seed inicial criado
 - [x] shadcn/ui configurado
-- [x] Home inicial criada
+- [x] Home inicial criada e redesenhada (tema escuro)
 - [x] `.env.example` criado
 - [x] Helpers de ambiente criados
 - [x] Helper Prisma criado
@@ -964,21 +964,27 @@ Observacao:
 - [x] Lint executado com sucesso
 - [x] Build executado com sucesso
 - [x] Servidor local testado em `http://localhost:3000`
-- [ ] Banco Supabase criado/configurado
-- [ ] `DATABASE_URL` real configurada
-- [ ] Migracao/schema aplicado no banco real
+- [x] Banco Supabase criado/configurado
+- [x] `DATABASE_URL` real configurada
+- [x] Migracao/schema aplicado no banco real
+- [x] Supabase Auth configurado no painel
+- [x] Guards SSR implementados (`requireUser`, `requireRole`, `requireFreelancer`, `requireEstablishment`, `requireAdmin`, `requireActiveAccess`)
+- [x] Cadastro de freelancer implementado
+- [x] Cadastro de estabelecimento implementado
+- [x] Lookup de CEP implementado (`/api/lookup/cep`)
+- [x] Catalogo de freelancers implementado (`/freelancers`) com filtros SSR e paginacao
+- [x] Catalogo de estabelecimentos implementado (`/estabelecimentos`) com filtros SSR e paginacao
+- [x] CRUD de vagas implementado
+- [x] Candidatura implementada
+- [x] Aceite/recusa com redirect e revalidacao implementado
+- [x] Tema escuro (bares/boates/restaurantes) aplicado em todo o app
+- [x] Layout mobile-first responsivo em todas as telas
+- [x] Campo Instagram em perfis de freelancer e estabelecimento
+- [x] Seguranca: role escalation corrigido, open redirect corrigido, headers HTTP adicionados
+- [x] Trial enforcement via `requireActiveAccess()` nas actions criticas
+- [x] Botao de refresh nas telas de candidatos e candidaturas
 - [ ] Seed executado no banco real
-- [ ] Supabase Auth configurado no painel
-- [ ] Fluxo real de verificacao de email implementado
-- [ ] Guards SSR implementados
-- [ ] Cadastro de freelancer implementado
-- [ ] Cadastro de estabelecimento implementado
 - [ ] Lookup de CNPJ implementado
-- [ ] Lookup de CEP implementado
-- [ ] Catalogo de estabelecimentos implementado
-- [ ] CRUD de vagas implementado
-- [ ] Candidatura implementada
-- [ ] Aceite/recusa com transacao implementado
 - [ ] Mercado Pago configurado
 - [ ] Tela de planos implementada
 - [ ] Criacao de assinatura Mercado Pago implementada
@@ -990,93 +996,162 @@ Observacao:
 
 ## 17. Proximas etapas recomendadas
 
-### Etapa 1 - Banco e ambiente
+### Etapa 1 - Concluida: banco, auth e guards
 
-1. Criar projeto Supabase.
-2. Copiar `DATABASE_URL` e `DIRECT_URL` reais para `.env`.
-3. Configurar `NEXT_PUBLIC_SUPABASE_URL`.
-4. Configurar `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-5. Configurar `SUPABASE_SERVICE_ROLE_KEY`.
-6. Rodar:
+Banco Supabase configurado, schema aplicado via `db:push`, auth funcionando com verificacao de email, guards SSR completos.
 
-```bash
-npm run db:push
-npm run db:seed
-```
+### Etapa 2 - Concluida: cadastros e marketplace
 
-### Etapa 2 - Auth e seguranca
+Cadastros de freelancer e estabelecimento funcionando. Vagas, candidatura, aceite/recusa e liberacao de contato apos aceite implementados.
 
-1. Implementar leitura da sessao Supabase no servidor.
-2. Criar sincronizacao entre `auth.users` e tabela `User`.
-3. Implementar guards:
+### Etapa 3 - Concluida: UI, seguranca e catalogos
 
-```txt
-requireUser()
-requireRole(role)
-requireActiveAccess()
-requireEstablishment()
-requireFreelancer()
-requireAdmin()
-assertResourceOwner()
-```
+Tema escuro, mobile-first, catalogos de freelancers e estabelecimentos com paginacao SSR, campo Instagram, hardening de seguranca.
 
-4. Criar rotas de login, cadastro e confirmacao.
-5. Garantir que toda pagina privada valide sessao no servidor.
-6. Garantir que toda Server Action valide role/plano/propriedade.
+### Etapa 4 - Pendente: lookup CNPJ
 
-### Etapa 3 - Cadastros
+1. Criar endpoint `/api/lookup/cnpj` usando BrasilAPI.
+2. Integrar no formulario de cadastro de estabelecimento para preenchimento automatico.
 
-1. Cadastro de freelancer.
-2. Cadastro de estabelecimento.
-3. Consulta CNPJ via BrasilAPI.
-4. Consulta CEP via ViaCEP.
-5. Validacoes com Zod.
-6. Criacao automatica do trial de 7 dias.
+### Etapa 5 - Pendente: planos e pagamentos
 
-### Etapa 4 - Marketplace
+1. Criar ou configurar planos no painel do Mercado Pago.
+2. Preencher `MERCADO_PAGO_FREELANCER_PLAN_ID` e `MERCADO_PAGO_ESTABLISHMENT_PLAN_ID` no `.env`.
+3. Implementar tela `/app/freelancer/plano` e `/app/estabelecimento/plano`.
+4. Criar assinatura/preapproval via Mercado Pago.
+5. Implementar webhook `/api/mercadopago/webhook` com validacao de assinatura HMAC.
+6. Atualizar tabela `Subscription` e registrar `PaymentHistory`.
+7. O guard `requireActiveAccess()` ja esta implementado e bloqueia apos trial — so precisa do webhook para ativar assinaturas pagas.
 
-1. Catalogo de estabelecimentos com filtros SSR.
-2. Vitrine de vagas.
-3. CRUD de vagas para estabelecimento.
-4. Candidatura do freelancer.
-5. Aceite/recusa com transacao.
-6. Liberacao controlada de contato apos aceite.
+### Etapa 6 - Pendente: admin e deploy
 
-### Etapa 5 - Planos e pagamentos
-
-1. Criar ou configurar planos no Mercado Pago.
-2. Implementar tela de planos.
-3. Criar assinatura/preapproval.
-4. Implementar webhook com validacao de assinatura.
-5. Atualizar `Subscription`.
-6. Registrar `PaymentHistory`.
-7. Bloquear acesso apos trial vencido sem assinatura ativa.
-
-### Etapa 6 - Admin e deploy
-
-1. Admin basico para usuarios, perfis, vagas e pagamentos.
-2. Revisao de seguranca.
-3. Teste completo.
-4. Configuracao Vercel.
-5. Configuracao de variaveis de ambiente na Vercel.
-6. Deploy.
+1. Admin basico para aprovar/bloquear perfis, ver usuarios, vagas e pagamentos.
+2. Configurar projeto na Vercel.
+3. Adicionar variaveis de ambiente na Vercel.
+4. Configurar dominio e `NEXT_PUBLIC_APP_URL` de producao.
+5. Executar `npm run db:seed` no banco de producao (especialidades e planos).
 
 ## 18. Decisoes pendentes
 
 Antes da integracao real em producao, definir:
 
-- Se as assinaturas do Mercado Pago serao com plano associado ou sem plano associado.
+- Se as assinaturas do Mercado Pago serao com plano associado (`preapproval_plan`) ou sem plano associado (`preapproval`).
 - URL final de producao para `NEXT_PUBLIC_APP_URL`.
-- Credenciais Supabase.
 - Credenciais Mercado Pago de teste e producao.
-- Politica exata de bloqueio apos trial vencido.
-- Se admin aprova manualmente todos os perfis ou se alguns entram aprovados automaticamente.
+- Politica de aprovacao de perfis: admin aprova manualmente ou perfis entram como APPROVED automaticamente. Atualmente o catalogo mostra perfis PENDING e APPROVED, excluindo apenas BLOCKED. Se aprovacao manual for obrigatoria, mudar filtro do catalogo para `.eq("status", "APPROVED")`.
+- Valor das assinaturas: Freelancer R$ 19,99/mes e Estabelecimento R$ 99,99/mes estao configurados no seed, ajustar se necessario.
 
 ## 19. Observacoes de desenvolvimento
 
-- O projeto ainda nao tem banco real conectado.
-- O `.env` gerado pelo Prisma contem valor local/temporario e nao deve ser versionado.
-- O arquivo versionavel correto para referencia e `.env.example`.
-- O servidor local ja foi iniciado anteriormente e respondeu em `http://localhost:3000`.
-- Como `src/generated/prisma` e gerado, ele nao deve ser editado manualmente.
-- As proximas mudancas devem priorizar auth e guards antes de telas privadas.
+- Banco Supabase esta conectado e operacional.
+- Schema aplicado via `prisma db push`. Toda mudanca no `schema.prisma` requer novo `npm run db:push`.
+- `src/generated/prisma` e gerado automaticamente e nao deve ser editado manualmente.
+- `npm audit` reportou vulnerabilidades moderadas em dependencias de desenvolvimento; nao impacta producao.
+- O catalogo exibe perfis com status PENDING e APPROVED (exclui apenas BLOCKED). Quando o admin for implementado, considerar mudar para somente APPROVED.
+- O guard `requireActiveAccess()` redireciona para `/app/[role]/plano` apos trial expirado sem assinatura — essas rotas ainda nao existem e precisam ser criadas junto com a integracao Mercado Pago.
+- Instagram e salvo no banco apenas quando o usuario preenche o campo (payload condicional). Campo vazio nao e enviado ao banco.
+- Erros do Supabase sao agora propagados com mensagem real via `getErrorMessage` em `profile.ts`.
+
+## 20. Sessao 2 — UI, seguranca e funcionalidades
+
+### 20.1 Tema escuro (bares/boates/restaurantes)
+
+- `src/app/globals.css`: paleta OKLCH com fundo quase-preto quente (`oklch(0.11 0.013 45)`), texto creme (`oklch(0.92 0.022 80)`), primario ambar/dourado (`oklch(0.72 0.16 65)`).
+- `src/app/layout.tsx`: adicionado `class="dark"` e `suppressHydrationWarning` no `<html>`.
+- Todas as paginas e componentes atualizados para usar variaveis CSS (`bg-card`, `bg-input`, `text-foreground`, etc.) sem hardcoded light colors.
+
+### 20.2 Mobile-first responsivo
+
+Ajustes em todas as paginas principais:
+
+- Padding base `px-4 py-6`, escalonando para `sm:px-5 sm:py-8`.
+- Botoes de acao com `w-full sm:w-auto`.
+- Grid de cards: `sm:grid-cols-2 md:grid-cols-3`.
+- `FreelancerProfileForm`: tabela de disponibilidade substituida por grid de cards responsivo (`grid-cols-2 sm:grid-cols-4` por turno).
+- `ProfileField`: altura `h-11 sm:h-10`, fonte `text-base sm:text-sm` (previne zoom automatico do iOS em inputs < 16px).
+- `ProfilePhotoInput`: layout `flex-col sm:flex-row`.
+- `AppHeader`: sticky com `backdrop-blur-sm`.
+
+### 20.3 Correcao de bug: botao WhatsApp apos rejeitar e aceitar
+
+- Problema: `acceptApplicationAction` e `rejectApplicationAction` chamavam apenas `revalidatePath` sem `redirect`, causando refresh inconsistente.
+- Correcao em `src/server/actions/jobs.ts`: adicionado `redirect()` ao final de ambas as actions.
+- Melhoria UX em `candidatos/page.tsx`: botao Aceitar so aparece quando status nao e `ACCEPTED`; botao Recusar so aparece quando status nao e `REJECTED`.
+
+### 20.4 Hardening de seguranca
+
+Vulnerabilidades corrigidas:
+
+**Critico — escalacao de privilegios via `user_metadata`:**
+
+- `src/lib/auth/internal-user-store.ts`: removido campo `role` do `update()` de usuarios existentes em `syncInternalUserFromSupabaseUser`. O `user_metadata` e editavel pelo usuario via SDK client, permitia autoescalacao para ADMIN a cada request.
+
+**Critico — open redirect no callback de autenticacao:**
+
+- `src/app/auth/callback/route.ts`: criada funcao `sanitizeNext()` que rejeita valores que nao sejam caminhos relativos puros (deve comecar com `/` mas nao com `//`). Previne redirecionamento para dominios externos via parametro `next`.
+
+**Alto — headers HTTP de seguranca ausentes:**
+
+- `next.config.ts`: adicionados via `headers()` em todas as rotas: `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`.
+
+**Alto — trial nao verificado nas actions criticas:**
+
+- `src/server/guards/auth.ts`: criada `requireActiveAccess(user)` que verifica `trialEndsAt` e busca assinatura ativa (`ACTIVE | AUTHORIZED | TRIALING`) na tabela `Subscription`.
+- `src/server/actions/jobs.ts`: `requireActiveAccess` chamado em `createJobPostAction` e `applyToJobAction`.
+
+**Medio — `dayOfWeek` sem validacao de entrada:**
+
+- `src/lib/profiles/profile-store.ts`: adicionado `validDays` (Set com os 7 valores do enum) em `replaceFreelancerAvailability`. Valores invalidos sao silenciosamente ignorados.
+
+**Melhoria — `getErrorMessage` expoe erros reais do Supabase:**
+
+- `src/server/actions/profile.ts`: `getErrorMessage` atualizado para extrair `.message` de objetos de erro do Supabase (que nao sao instancias de `Error`).
+
+### 20.5 Campo Instagram
+
+- `prisma/schema.prisma`: campo `instagram String?` adicionado em `EstablishmentProfile` e `FreelancerProfile`.
+- `npm run db:push` aplicou a migracao no banco Supabase.
+- `src/lib/profiles/validators.ts`: `instagram: optionalText` adicionado nos dois schemas Zod.
+- `src/lib/profiles/profile-store.ts`: tipos e funcoes upsert atualizados.
+- `src/lib/jobs/formatters.ts`: funcao `getInstagramUrl(handle)` adicionada (strip do `@`, retorna `https://www.instagram.com/{username}`).
+- `src/components/ui/instagram-icon.tsx`: componente SVG criado (estilo camera do Instagram, usa `currentColor`).
+- Formularios de perfil: campo Instagram com placeholder `@seuarroba` adicionado apos WhatsApp.
+- Regra de visibilidade:
+  - Instagram do freelancer: sempre visivel na tela de candidatos do estabelecimento.
+  - Instagram do estabelecimento: visivel apenas apos aceite da candidatura (mesmo gate do WhatsApp).
+- Payload condicional: instagram so e enviado ao banco quando o usuario preenche o campo.
+
+### 20.6 Catalogo de freelancers (`/freelancers`)
+
+- Rota protegida: somente perfil ESTABLISHMENT (e ADMIN).
+- `src/lib/profiles/profile-store.ts`: funcao `getFreelancerCatalog()` com:
+  - Filtros: cidade (`ilike`), especialidade (join `FreelancerSpecialty`), turno (join `Availability` por `startTime`).
+  - Interseccao de sets de IDs para combinacao de filtros.
+  - Paginacao offset com `count: "exact"` do Supabase. Page size: 12.
+  - Exclui apenas perfis `BLOCKED` (mostra `PENDING` e `APPROVED`).
+  - Carrega especialidades e disponibilidade em lote (`Promise.all`).
+- `src/app/freelancers/page.tsx`: pagina SSR com filtros em URL (`?cidade=&especialidade=&turno=&pagina=`), grid de cards, paginacao com Anterior/Proxima.
+- Cards: foto circular, nome, cidade/bairro, bio (2 linhas), especialidades (badges), turnos (chips), Instagram.
+
+### 20.7 Catalogo de estabelecimentos (`/estabelecimentos`) — reconstruido
+
+- Rota protegida: somente perfil FREELANCER (e ADMIN).
+- `src/lib/profiles/profile-store.ts`: funcao `getEstablishmentCatalog()` com:
+  - Filtros: cidade, bairro, nome (todos `ilike`).
+  - Paginacao offset com `count: "exact"`. Page size: 12.
+  - Exclui apenas perfis `BLOCKED`.
+  - Seleciona: `tradeName`, `type`, `city`, `neighborhood`, `street`, `number`, `cep`, `description`, `profilePhotoUrl`, `instagram`.
+- `src/app/estabelecimentos/page.tsx`: reconstruida com filtros em URL, grid de cards, paginacao.
+- Cards: logo, nome, badge de tipo, descricao (2 linhas), endereco completo formatado, Instagram.
+
+### 20.8 Atualizacoes de dashboard
+
+- Painel do estabelecimento: Perfil · Vagas · Freelancers (link para `/freelancers`).
+- Painel do freelancer: Perfil · Vagas · Candidaturas · Estabelecimentos (link para `/estabelecimentos`).
+- Cada perfil ve apenas o catalogo do outro tipo de usuario.
+
+### 20.9 Botao de atualizar (refresh)
+
+- `src/components/ui/refresh-button.tsx`: componente client com `useTransition` + `router.refresh()`.
+- Feedback visual: icone `RefreshCw` com rotacao de 180 graus, texto "Atualizando..." durante pendencia.
+- Adicionado na tela de candidatos (`/app/estabelecimento/vagas/[id]/candidatos`) e candidaturas (`/app/freelancer/candidaturas`).

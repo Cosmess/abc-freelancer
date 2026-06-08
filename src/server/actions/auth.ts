@@ -18,6 +18,7 @@ import {
   loginSchema,
   resendVerificationSchema,
 } from "@/lib/auth/validators";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function flattenErrors(error: {
@@ -59,6 +60,29 @@ function getAuthErrorMessage(error: unknown): string {
   }
 
   return "Nao foi possivel concluir a operacao agora.";
+}
+
+async function createPendingAuthUser(input: {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+}) {
+  const { data, error } = await getSupabaseAdminClient().auth.admin.createUser({
+    email: input.email,
+    password: input.password,
+    email_confirm: false,
+    user_metadata: {
+      name: input.name,
+      role: input.role,
+    },
+  });
+
+  if (error || !data.user) {
+    throw error ?? new Error("Nao foi possivel criar sua conta.");
+  }
+
+  return data.user;
 }
 
 export async function loginAction(
@@ -145,30 +169,23 @@ export async function signupFreelancerAction(
     return { message: getAuthErrorMessage(error) };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${getAppUrl()}/auth/callback?next=/app/freelancer`,
-      data: {
-        name: parsed.data.fullName,
-        role: UserRole.FREELANCER,
-      },
-    },
-  });
+  let authUserId: string;
 
-  if (error || !data.user) {
-    return {
-      message: error
-        ? getAuthErrorMessage(error)
-        : "Nao foi possivel criar sua conta.",
-    };
+  try {
+    const authUser = await createPendingAuthUser({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      name: parsed.data.fullName,
+      role: UserRole.FREELANCER,
+    });
+    authUserId = authUser.id;
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
   }
 
   try {
     await createInternalFreelancerUser({
-      supabaseAuthUserId: data.user.id,
+      supabaseAuthUserId: authUserId,
       email: parsed.data.email,
       fullName: parsed.data.fullName,
       whatsapp: parsed.data.whatsapp,
@@ -177,12 +194,8 @@ export async function signupFreelancerAction(
       neighborhood: parsed.data.neighborhood,
     });
   } catch (error) {
+    await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
     return { message: getAuthErrorMessage(error) };
-  }
-
-  if (data.session && data.user.email_confirmed_at) {
-    await syncInternalUserFromSupabaseUser(data.user);
-    redirect("/app/freelancer");
   }
 
   redirect("/auth/confirmar-email");
@@ -209,30 +222,23 @@ export async function signupEstablishmentAction(
     return { message: getAuthErrorMessage(error) };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    options: {
-      emailRedirectTo: `${getAppUrl()}/auth/callback?next=/app/estabelecimento`,
-      data: {
-        name: parsed.data.responsibleName,
-        role: UserRole.ESTABLISHMENT,
-      },
-    },
-  });
+  let authUserId: string;
 
-  if (error || !data.user) {
-    return {
-      message: error
-        ? getAuthErrorMessage(error)
-        : "Nao foi possivel criar sua conta.",
-    };
+  try {
+    const authUser = await createPendingAuthUser({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      name: parsed.data.responsibleName,
+      role: UserRole.ESTABLISHMENT,
+    });
+    authUserId = authUser.id;
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
   }
 
   try {
     await createInternalEstablishmentUser({
-      supabaseAuthUserId: data.user.id,
+      supabaseAuthUserId: authUserId,
       email: parsed.data.email,
       responsibleName: parsed.data.responsibleName,
       tradeName: parsed.data.tradeName,
@@ -242,12 +248,8 @@ export async function signupEstablishmentAction(
       neighborhood: parsed.data.neighborhood,
     });
   } catch (error) {
+    await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
     return { message: getAuthErrorMessage(error) };
-  }
-
-  if (data.session && data.user.email_confirmed_at) {
-    await syncInternalUserFromSupabaseUser(data.user);
-    redirect("/app/estabelecimento");
   }
 
   redirect("/auth/confirmar-email");

@@ -3,19 +3,19 @@
 import { redirect } from "next/navigation";
 
 import { UserRole } from "@/generated/prisma/client";
-import { getAppUrl, getRoleHomePath } from "@/lib/auth/paths";
 import {
   createInternalEstablishmentUser,
   createInternalFreelancerUser,
+  findInternalUserByEmail,
   syncInternalUserFromSupabaseUser,
-} from "@/lib/auth/sync-user";
+} from "@/lib/auth/internal-user-store";
+import { getAppUrl, getRoleHomePath } from "@/lib/auth/paths";
 import {
   type AuthActionState,
   establishmentSignupSchema,
   freelancerSignupSchema,
   loginSchema,
 } from "@/lib/auth/validators";
-import { getPrisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function flattenErrors(error: {
@@ -29,13 +29,21 @@ function cleanDocument(value: string | undefined): string | undefined {
 }
 
 async function assertEmailAvailable(email: string): Promise<AuthActionState | null> {
-  const existing = await getPrisma().user.findUnique({ where: { email } });
+  const existing = await findInternalUserByEmail(email);
 
   if (existing) {
     return { message: "Este email ja esta cadastrado." };
   }
 
   return null;
+}
+
+function getAuthErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Nao foi possivel concluir a operacao agora.";
 }
 
 export async function loginAction(
@@ -77,9 +85,13 @@ export async function signupFreelancerAction(
     return { errors: flattenErrors(parsed.error) };
   }
 
-  const emailError = await assertEmailAvailable(parsed.data.email);
-  if (emailError) {
-    return emailError;
+  try {
+    const emailError = await assertEmailAvailable(parsed.data.email);
+    if (emailError) {
+      return emailError;
+    }
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -99,15 +111,19 @@ export async function signupFreelancerAction(
     return { message: error?.message ?? "Nao foi possivel criar sua conta." };
   }
 
-  await createInternalFreelancerUser({
-    supabaseAuthUserId: data.user.id,
-    email: parsed.data.email,
-    fullName: parsed.data.fullName,
-    whatsapp: parsed.data.whatsapp,
-    cpf: cleanDocument(parsed.data.cpf),
-    city: parsed.data.city,
-    neighborhood: parsed.data.neighborhood,
-  });
+  try {
+    await createInternalFreelancerUser({
+      supabaseAuthUserId: data.user.id,
+      email: parsed.data.email,
+      fullName: parsed.data.fullName,
+      whatsapp: parsed.data.whatsapp,
+      cpf: cleanDocument(parsed.data.cpf),
+      city: parsed.data.city,
+      neighborhood: parsed.data.neighborhood,
+    });
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
+  }
 
   if (data.session && data.user.email_confirmed_at) {
     await syncInternalUserFromSupabaseUser(data.user);
@@ -129,9 +145,13 @@ export async function signupEstablishmentAction(
     return { errors: flattenErrors(parsed.error) };
   }
 
-  const emailError = await assertEmailAvailable(parsed.data.email);
-  if (emailError) {
-    return emailError;
+  try {
+    const emailError = await assertEmailAvailable(parsed.data.email);
+    if (emailError) {
+      return emailError;
+    }
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -151,16 +171,20 @@ export async function signupEstablishmentAction(
     return { message: error?.message ?? "Nao foi possivel criar sua conta." };
   }
 
-  await createInternalEstablishmentUser({
-    supabaseAuthUserId: data.user.id,
-    email: parsed.data.email,
-    responsibleName: parsed.data.responsibleName,
-    tradeName: parsed.data.tradeName,
-    whatsapp: parsed.data.whatsapp,
-    cnpj: cleanDocument(parsed.data.cnpj) ?? parsed.data.cnpj,
-    city: parsed.data.city,
-    neighborhood: parsed.data.neighborhood,
-  });
+  try {
+    await createInternalEstablishmentUser({
+      supabaseAuthUserId: data.user.id,
+      email: parsed.data.email,
+      responsibleName: parsed.data.responsibleName,
+      tradeName: parsed.data.tradeName,
+      whatsapp: parsed.data.whatsapp,
+      cnpj: cleanDocument(parsed.data.cnpj) ?? parsed.data.cnpj,
+      city: parsed.data.city,
+      neighborhood: parsed.data.neighborhood,
+    });
+  } catch (error) {
+    return { message: getAuthErrorMessage(error) };
+  }
 
   if (data.session && data.user.email_confirmed_at) {
     await syncInternalUserFromSupabaseUser(data.user);

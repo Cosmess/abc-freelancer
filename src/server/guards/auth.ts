@@ -2,9 +2,11 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 
 import { UserRole } from "@/generated/prisma/client";
+import {
+  findInternalUserByAuthId,
+  syncInternalUserFromSupabaseUser,
+} from "@/lib/auth/internal-user-store";
 import { getRoleHomePath } from "@/lib/auth/paths";
-import { syncInternalUserFromSupabaseUser } from "@/lib/auth/sync-user";
-import { getPrisma } from "@/lib/prisma";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const getCurrentUser = cache(async () => {
@@ -19,13 +21,7 @@ export const getCurrentUser = cache(async () => {
 
   await syncInternalUserFromSupabaseUser(authUser);
 
-  return getPrisma().user.findUnique({
-    where: { supabaseAuthUserId: authUser.id },
-    include: {
-      establishmentProfile: true,
-      freelancerProfile: true,
-    },
-  });
+  return findInternalUserByAuthId(authUser.id);
 });
 
 export async function requireUser() {

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { syncInternalUserFromSupabaseUser } from "@/lib/auth/internal-user-store";
 import { getRoleHomePath } from "@/lib/auth/paths";
-import { syncInternalUserFromSupabaseUser } from "@/lib/auth/sync-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {

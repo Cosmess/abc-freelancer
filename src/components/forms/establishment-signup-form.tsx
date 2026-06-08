@@ -72,6 +72,15 @@ export function EstablishmentSignupForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium">
+          Telefone
+          <input
+            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            name="phone"
+            inputMode="tel"
+          />
+          <FieldError errors={state.errors?.phone} />
+        </label>
+        <label className="grid gap-2 text-sm font-medium">
           CNPJ
           <input
             className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -81,6 +90,9 @@ export function EstablishmentSignupForm() {
           />
           <FieldError errors={state.errors?.cnpj} />
         </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2 text-sm font-medium">
           WhatsApp
           <input

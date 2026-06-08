@@ -19,6 +19,22 @@ export type FreelancerProfile = {
   status: string;
 };
 
+export type Specialty = {
+  id: string;
+  name: string;
+  slug: string;
+  category: string | null;
+};
+
+export type Availability = {
+  id: string;
+  freelancerId: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+};
+
 export type EstablishmentProfile = {
   id: string;
   userId: string;
@@ -51,6 +67,50 @@ export async function getFreelancerProfile(userId: string) {
   }
 
   return data;
+}
+
+export async function getActiveSpecialties() {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("Specialty")
+    .select("id,name,slug,category")
+    .eq("active", true)
+    .order("category", { ascending: true })
+    .order("name", { ascending: true })
+    .returns<Specialty[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function getFreelancerSpecialtyIds(freelancerId: string) {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("FreelancerSpecialty")
+    .select("specialtyId")
+    .eq("freelancerId", freelancerId)
+    .returns<Array<{ specialtyId: string }>>();
+
+  if (error) {
+    throw error;
+  }
+
+  return new Set((data ?? []).map((item) => item.specialtyId));
+}
+
+export async function getFreelancerAvailability(freelancerId: string) {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("Availability")
+    .select("*")
+    .eq("freelancerId", freelancerId)
+    .returns<Availability[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
 }
 
 export async function getEstablishmentProfile(userId: string) {
@@ -122,6 +182,8 @@ export async function upsertFreelancerProfile(input: {
         .from("FreelancerProfile")
         .update(payload)
         .eq("id", existing.id)
+        .select("*")
+        .single<FreelancerProfile>()
     : getSupabaseAdminClient()
         .from("FreelancerProfile")
         .insert({
@@ -129,9 +191,107 @@ export async function upsertFreelancerProfile(input: {
           userId: input.userId,
           ...payload,
           createdAt: now,
-        });
+        })
+        .select("*")
+        .single<FreelancerProfile>();
 
-  const { error } = await query;
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function replaceFreelancerSpecialties(input: {
+  freelancerId: string;
+  specialtyIds: string[];
+}) {
+  const supabase = getSupabaseAdminClient();
+  const { error: deleteError } = await supabase
+    .from("FreelancerSpecialty")
+    .delete()
+    .eq("freelancerId", input.freelancerId);
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+  if (!input.specialtyIds.length) {
+    return;
+  }
+
+  const { error } = await supabase.from("FreelancerSpecialty").insert(
+    input.specialtyIds.map((specialtyId) => ({
+      id: randomUUID(),
+      freelancerId: input.freelancerId,
+      specialtyId,
+      createdAt: new Date().toISOString(),
+    })),
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function replaceFreelancerAvailability(input: {
+  freelancerId: string;
+  preferences: Array<{ dayOfWeek: string; shift: string }>;
+}) {
+  const supabase = getSupabaseAdminClient();
+  const { error: deleteError } = await supabase
+    .from("Availability")
+    .delete()
+    .eq("freelancerId", input.freelancerId);
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+  if (!input.preferences.length) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const shiftTimes: Record<string, { startTime: string; endTime: string }> = {
+    manha: { startTime: "06:00", endTime: "12:00" },
+    tarde: { startTime: "12:00", endTime: "18:00" },
+    noite: { startTime: "18:00", endTime: "23:59" },
+  };
+
+  const rows: Array<{
+    id: string;
+    freelancerId: string;
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+    available: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }> = [];
+
+  input.preferences.forEach((preference) => {
+      const shift = shiftTimes[preference.shift];
+
+      if (!shift) {
+        return;
+      }
+
+      rows.push({
+        id: randomUUID(),
+        freelancerId: input.freelancerId,
+        dayOfWeek: preference.dayOfWeek,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+        available: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+  const { error } = await supabase.from("Availability").insert(rows);
 
   if (error) {
     throw error;

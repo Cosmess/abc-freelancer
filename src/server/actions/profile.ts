@@ -9,6 +9,8 @@ import {
 } from "@/lib/profiles/validators";
 import {
   updateUserBasics,
+  replaceFreelancerAvailability,
+  replaceFreelancerSpecialties,
   upsertEstablishmentProfile,
   upsertFreelancerProfile,
 } from "@/lib/profiles/profile-store";
@@ -22,6 +24,17 @@ function flattenErrors(error: {
 
 function cleanDocument(value: string | undefined): string | undefined {
   return value?.replace(/\D/g, "");
+}
+
+function parseAvailability(formData: FormData) {
+  return formData
+    .getAll("availability")
+    .map(String)
+    .map((value) => {
+      const [dayOfWeek, shift] = value.split(":");
+      return { dayOfWeek, shift };
+    })
+    .filter((item) => item.dayOfWeek && item.shift);
 }
 
 function getErrorMessage(error: unknown): string {
@@ -49,7 +62,7 @@ export async function updateFreelancerProfileAction(
       name: parsed.data.fullName,
       phone: parsed.data.phone,
     });
-    await upsertFreelancerProfile({
+    const profile = await upsertFreelancerProfile({
       userId: user.id,
       fullName: parsed.data.fullName,
       cpf: cleanDocument(parsed.data.cpf),
@@ -62,6 +75,14 @@ export async function updateFreelancerProfileAction(
       bio: parsed.data.bio,
       experience: parsed.data.experience,
       profilePhotoUrl: parsed.data.profilePhotoUrl,
+    });
+    await replaceFreelancerSpecialties({
+      freelancerId: profile.id,
+      specialtyIds: formData.getAll("specialtyIds").map(String),
+    });
+    await replaceFreelancerAvailability({
+      freelancerId: profile.id,
+      preferences: parseAvailability(formData),
     });
   } catch (error) {
     return { message: getErrorMessage(error) };

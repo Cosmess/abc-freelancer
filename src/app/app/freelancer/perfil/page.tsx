@@ -1,11 +1,21 @@
 import { FreelancerProfileForm } from "@/components/forms/freelancer-profile-form";
 import { AppHeader } from "@/components/layout/app-header";
-import { getFreelancerProfile } from "@/lib/profiles/profile-store";
+import {
+  getActiveSpecialties,
+  getFreelancerAvailability,
+  getFreelancerProfile,
+  getFreelancerSpecialtyIds,
+} from "@/lib/profiles/profile-store";
 import { requireFreelancer } from "@/server/guards/auth";
 
 export default async function FreelancerProfilePage() {
   const user = await requireFreelancer();
   const profile = await getFreelancerProfile(user.id);
+  const [specialties, selectedSpecialtyIds, availability] = await Promise.all([
+    getActiveSpecialties(),
+    profile ? getFreelancerSpecialtyIds(profile.id) : Promise.resolve(new Set<string>()),
+    profile ? getFreelancerAvailability(profile.id) : Promise.resolve([]),
+  ]);
 
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
@@ -18,7 +28,13 @@ export default async function FreelancerProfilePage() {
             apos o aceite.
           </p>
         </div>
-        <FreelancerProfileForm user={user} profile={profile} />
+        <FreelancerProfileForm
+          user={user}
+          profile={profile}
+          specialties={specialties}
+          selectedSpecialtyIds={selectedSpecialtyIds}
+          availability={availability}
+        />
       </section>
     </main>
   );

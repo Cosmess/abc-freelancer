@@ -179,6 +179,7 @@ export async function createInternalFreelancerUser(input: {
   supabaseAuthUserId: string;
   email: string;
   fullName: string;
+  phone?: string;
   whatsapp?: string;
   cpf?: string;
   city: string;
@@ -194,6 +195,7 @@ export async function createInternalFreelancerUser(input: {
       supabaseAuthUserId: input.supabaseAuthUserId,
       email: input.email,
       name: input.fullName,
+      phone: input.phone || null,
       role: UserRole.FREELANCER,
       trialStartsAt: now.toISOString(),
       trialEndsAt: getTrialEndsAt(now).toISOString(),
@@ -231,6 +233,7 @@ export async function createInternalEstablishmentUser(input: {
   supabaseAuthUserId: string;
   email: string;
   responsibleName: string;
+  phone?: string;
   tradeName: string;
   whatsapp?: string;
   cnpj: string;
@@ -247,6 +250,7 @@ export async function createInternalEstablishmentUser(input: {
       supabaseAuthUserId: input.supabaseAuthUserId,
       email: input.email,
       name: input.responsibleName,
+      phone: input.phone || null,
       role: UserRole.ESTABLISHMENT,
       trialStartsAt: now.toISOString(),
       trialEndsAt: getTrialEndsAt(now).toISOString(),

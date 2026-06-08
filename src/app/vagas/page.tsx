@@ -2,10 +2,12 @@ import Link from "next/link";
 import { BriefcaseBusiness, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { getOpenJobPosts } from "@/lib/jobs/job-store";
 import { requireUser } from "@/server/guards/auth";
 
 export default async function JobsPage() {
   await requireUser();
+  const jobs = await getOpenJobPosts();
 
   return (
     <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">
@@ -31,13 +33,36 @@ export default async function JobsPage() {
           </Button>
         </div>
 
-        <div className="rounded-md border bg-background p-5 shadow-sm">
-          <BriefcaseBusiness className="mb-4 size-6 text-muted-foreground" />
-          <h2 className="font-medium">Catalogo de vagas em preparacao</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Esta area ja esta bloqueada para usuarios logados. O proximo bloco
-            implementa filtros reais, CRUD de vagas e candidatura.
-          </p>
+        <div className="rounded-md border bg-background shadow-sm">
+          {jobs.length ? (
+            <div className="divide-y">
+              {jobs.map((job) => (
+                <article key={job.id} className="grid gap-2 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div>
+                    <h2 className="font-medium">{job.title}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {job.city}
+                      {job.neighborhood ? `, ${job.neighborhood}` : ""} -{" "}
+                      {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
+                      {job.startTime} as {job.endTime}
+                    </p>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} ·{" "}
+                    {job.quantity} vaga(s)
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="p-5">
+              <BriefcaseBusiness className="mb-4 size-6 text-muted-foreground" />
+              <h2 className="font-medium">Nenhuma vaga aberta</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                Assim que estabelecimentos criarem vagas, elas aparecem aqui.
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </main>

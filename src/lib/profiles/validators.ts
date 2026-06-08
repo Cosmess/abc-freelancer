@@ -41,3 +41,21 @@ export type ProfileActionState = {
   success?: boolean;
   errors?: Record<string, string[] | undefined>;
 };
+
+export const jobPostSchema = z.object({
+  title: z.string().trim().min(3, "Informe o titulo da vaga."),
+  description: optionalText,
+  specialtyId: z.string().trim().min(1, "Selecione uma especialidade."),
+  city: z.string().trim().min(2, "Informe a cidade."),
+  neighborhood: optionalText,
+  street: optionalText,
+  number: optionalText,
+  cep: optionalText,
+  workDate: z.string().trim().min(10, "Informe a data."),
+  startTime: z.string().trim().min(4, "Informe o inicio."),
+  endTime: z.string().trim().min(4, "Informe o fim."),
+  paymentType: z.enum(["DAILY", "HOURLY", "FIXED"]),
+  paymentValue: z.coerce.number().positive("Informe o valor."),
+  quantity: z.coerce.number().int().min(1, "Informe a quantidade."),
+  requirements: optionalText,
+});

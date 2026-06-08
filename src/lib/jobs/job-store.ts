@@ -108,7 +108,7 @@ async function getEstablishments(ids: string[]) {
 
   const { data, error } = await getSupabaseAdminClient()
     .from("EstablishmentProfile")
-    .select("id,tradeName,whatsapp,instagram,profilePhotoUrl")
+    .select("*")
     .in("id", Array.from(new Set(ids)))
     .returns<
       Array<{
@@ -117,6 +117,7 @@ async function getEstablishments(ids: string[]) {
         whatsapp: string | null;
         instagram: string | null;
         profilePhotoUrl: string | null;
+        [key: string]: unknown;
       }>
     >();
 
@@ -130,7 +131,7 @@ async function getEstablishments(ids: string[]) {
       {
         tradeName: item.tradeName,
         whatsapp: item.whatsapp,
-        instagram: item.instagram,
+        instagram: item.instagram ?? null,
         profilePhotoUrl: item.profilePhotoUrl,
       },
     ]),
@@ -439,7 +440,7 @@ export async function getApplicationsByJobForEstablishment(input: {
 
   const { data: freelancers, error: freelancersError } = await getSupabaseAdminClient()
     .from("FreelancerProfile")
-    .select("id,fullName,email,whatsapp,instagram,profilePhotoUrl,city,neighborhood,bio,experience")
+    .select("*")
     .in("id", freelancerIds)
     .returns<
       Array<{
@@ -453,6 +454,7 @@ export async function getApplicationsByJobForEstablishment(input: {
         neighborhood: string | null;
         bio: string | null;
         experience: string | null;
+        [key: string]: unknown;
       }>
     >();
 

@@ -43,6 +43,10 @@ function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
+  if (error && typeof error === "object" && "message" in error && typeof (error as { message: unknown }).message === "string") {
+    return (error as { message: string }).message;
+  }
+
   return "Nao foi possivel salvar o perfil.";
 }
 
@@ -91,7 +95,7 @@ export async function updateFreelancerProfileAction(
       fullName: parsed.data.fullName,
       cpf: cleanDocument(parsed.data.cpf),
       whatsapp: parsed.data.whatsapp,
-      instagram: parsed.data.instagram,
+      ...(parsed.data.instagram ? { instagram: parsed.data.instagram } : {}),
       email: parsed.data.email,
       city: parsed.data.city,
       neighborhood: parsed.data.neighborhood,
@@ -149,7 +153,7 @@ export async function updateEstablishmentProfileAction(
       legalName: parsed.data.legalName,
       cnpj: cleanDocument(parsed.data.cnpj) ?? parsed.data.cnpj,
       whatsapp: parsed.data.whatsapp,
-      instagram: parsed.data.instagram,
+      ...(parsed.data.instagram ? { instagram: parsed.data.instagram } : {}),
       email: parsed.data.email,
       type: parsed.data.type,
       description: parsed.data.description,

@@ -15,6 +15,7 @@ import {
   establishmentSignupSchema,
   freelancerSignupSchema,
   loginSchema,
+  resendVerificationSchema,
 } from "@/lib/auth/validators";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -73,6 +74,35 @@ export async function loginAction(
 
   const user = await syncInternalUserFromSupabaseUser(data.user);
   redirect(getRoleHomePath(user.role));
+}
+
+export async function resendVerificationEmailAction(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = resendVerificationSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return { errors: flattenErrors(parsed.error) };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: {
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return { message: error.message };
+  }
+
+  return {
+    success: true,
+    message: "Email de verificacao reenviado. Verifique tambem spam e lixo eletronico.",
+  };
 }
 
 export async function signupFreelancerAction(

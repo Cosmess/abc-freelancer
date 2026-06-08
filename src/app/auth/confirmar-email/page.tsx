@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
 
+import { ResendVerificationForm } from "@/components/forms/resend-verification-form";
 import { Button } from "@/components/ui/button";
 
 export default function ConfirmEmailPage() {
@@ -20,6 +21,7 @@ export default function ConfirmEmailPage() {
               confirme sua conta e depois entre novamente.
             </p>
           </div>
+          <ResendVerificationForm />
           <div className="mt-6 flex gap-3">
             <Button asChild>
               <Link href="/login">Ir para login</Link>

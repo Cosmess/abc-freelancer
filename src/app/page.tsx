@@ -11,6 +11,9 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { UserRole } from "@/generated/prisma/client";
+import { getCurrentUser } from "@/server/guards/auth";
+import { logoutAction } from "@/server/actions/auth";
 
 const steps = [
   "Crie sua conta como freelancer ou estabelecimento.",
@@ -18,7 +21,23 @@ const steps = [
   "Use a area logada para buscar vagas, catalogos e candidaturas.",
 ];
 
-export default function Home() {
+function getProfilePath(role: UserRole) {
+  if (role === UserRole.ESTABLISHMENT) return "/app/estabelecimento/perfil";
+  if (role === UserRole.ADMIN) return "/admin";
+
+  return "/app/freelancer/perfil";
+}
+
+function getDashboardPath(role: UserRole) {
+  if (role === UserRole.ESTABLISHMENT) return "/app/estabelecimento";
+  if (role === UserRole.ADMIN) return "/admin";
+
+  return "/app/freelancer";
+}
+
+export default async function Home() {
+  const user = await getCurrentUser();
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b bg-background">
@@ -27,15 +46,30 @@ export default function Home() {
             ABC Freelancer
           </Link>
           <nav className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Entrar</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/cadastro">
-                Criar conta
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            {user ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href={getDashboardPath(user.role)}>Painel</Link>
+                </Button>
+                <form action={logoutAction}>
+                  <Button type="submit" variant="outline">
+                    Sair
+                  </Button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Entrar</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/cadastro">
+                    Criar conta
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -58,18 +92,37 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button className="h-11" asChild>
-                <Link href="/cadastro/freelancer">
-                  <UserRound className="size-4" />
-                  Sou freelancer
-                </Link>
-              </Button>
-              <Button className="h-11" variant="outline" asChild>
-                <Link href="/cadastro/estabelecimento">
-                  <Building2 className="size-4" />
-                  Tenho estabelecimento
-                </Link>
-              </Button>
+              {user ? (
+                <>
+                  <Button className="h-11" asChild>
+                    <Link href={getDashboardPath(user.role)}>
+                      <BriefcaseBusiness className="size-4" />
+                      Acessar painel
+                    </Link>
+                  </Button>
+                  <Button className="h-11" variant="outline" asChild>
+                    <Link href={getProfilePath(user.role)}>
+                      <UserRound className="size-4" />
+                      Meu perfil
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="h-11" asChild>
+                    <Link href="/cadastro/freelancer">
+                      <UserRound className="size-4" />
+                      Sou freelancer
+                    </Link>
+                  </Button>
+                  <Button className="h-11" variant="outline" asChild>
+                    <Link href="/cadastro/estabelecimento">
+                      <Building2 className="size-4" />
+                      Tenho estabelecimento
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -114,7 +167,7 @@ export default function Home() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/login">
+            <Link href={user ? getDashboardPath(user.role) : "/login"}>
               <BriefcaseBusiness className="size-4" />
               Acessar area logada
             </Link>

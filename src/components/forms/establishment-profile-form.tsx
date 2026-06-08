@@ -5,6 +5,7 @@ import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
 import { Button } from "@/components/ui/button";
+import { fillAddressFromCep } from "@/lib/address/cep-lookup";
 import type { InternalUser } from "@/lib/auth/internal-user-store";
 import type { EstablishmentProfile } from "@/lib/profiles/profile-store";
 import type { ProfileActionState } from "@/lib/profiles/validators";
@@ -46,7 +47,7 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
         <ProfileField label="Tipo" name="type" value={profile?.type ?? ""} error={state.errors?.type} />
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
         <ProfileField label="WhatsApp" name="whatsapp" value={profile?.whatsapp ?? ""} error={state.errors?.whatsapp} />
-        <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} />
+        <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} lookupCep />
         <ProfileField label="UF" name="state" value={profile?.state ?? ""} error={state.errors?.state} />
         <ProfileField label="Cidade" name="city" value={profile?.city ?? ""} error={state.errors?.city} />
         <ProfileField label="Bairro" name="neighborhood" value={profile?.neighborhood ?? ""} error={state.errors?.neighborhood} />
@@ -76,6 +77,7 @@ function ProfileField({
   error,
   type = "text",
   required = false,
+  lookupCep = false,
 }: {
   label: string;
   name: string;
@@ -83,6 +85,7 @@ function ProfileField({
   error?: string[];
   type?: string;
   required?: boolean;
+  lookupCep?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -93,6 +96,11 @@ function ProfileField({
         type={type}
         defaultValue={value}
         required={required}
+        onBlur={(event) => {
+          if (lookupCep) {
+            void fillAddressFromCep(event.currentTarget.form!, event.currentTarget.value);
+          }
+        }}
       />
       <FieldError errors={error} />
     </label>

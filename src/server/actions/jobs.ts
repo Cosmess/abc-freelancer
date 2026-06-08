@@ -3,10 +3,18 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-import { createJobPost } from "@/lib/jobs/job-store";
-import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
+import {
+  createJobApplication,
+  createJobPost,
+  deleteJobPostForEstablishment,
+  updateApplicationStatusForEstablishment,
+} from "@/lib/jobs/job-store";
+import {
+  getEstablishmentProfile,
+  getFreelancerProfile,
+} from "@/lib/profiles/profile-store";
 import { jobPostSchema, type ProfileActionState } from "@/lib/profiles/validators";
-import { requireEstablishment } from "@/server/guards/auth";
+import { requireEstablishment, requireFreelancer } from "@/server/guards/auth";
 
 function flattenErrors(error: {
   flatten: () => { fieldErrors: Record<string, string[] | undefined> };
@@ -50,4 +58,76 @@ export async function createJobPostAction(
 
   revalidatePath("/app/estabelecimento/vagas");
   redirect("/app/estabelecimento/vagas");
+}
+
+export async function applyToJobAction(jobPostId: string, formData: FormData) {
+  const user = await requireFreelancer();
+  const profile = await getFreelancerProfile(user.id);
+
+  if (!profile) {
+    redirect("/app/freelancer/perfil");
+  }
+
+  await createJobApplication({
+    jobPostId,
+    freelancerId: profile.id,
+    message: formData.get("message")?.toString(),
+  });
+
+  revalidatePath("/vagas");
+  revalidatePath("/app/freelancer/candidaturas");
+  redirect("/app/freelancer/candidaturas");
+}
+
+export async function deleteJobPostAction(jobPostId: string) {
+  const user = await requireEstablishment();
+  const profile = await getEstablishmentProfile(user.id);
+
+  if (!profile) {
+    redirect("/app/estabelecimento/perfil");
+  }
+
+  await deleteJobPostForEstablishment({
+    jobPostId,
+    establishmentId: profile.id,
+  });
+
+  revalidatePath("/vagas");
+  revalidatePath("/app/estabelecimento/vagas");
+}
+
+export async function acceptApplicationAction(applicationId: string, jobPostId: string) {
+  const user = await requireEstablishment();
+  const profile = await getEstablishmentProfile(user.id);
+
+  if (!profile) {
+    redirect("/app/estabelecimento/perfil");
+  }
+
+  await updateApplicationStatusForEstablishment({
+    applicationId,
+    establishmentId: profile.id,
+    status: "ACCEPTED",
+  });
+
+  revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
+  revalidatePath("/app/freelancer/candidaturas");
+}
+
+export async function rejectApplicationAction(applicationId: string, jobPostId: string) {
+  const user = await requireEstablishment();
+  const profile = await getEstablishmentProfile(user.id);
+
+  if (!profile) {
+    redirect("/app/estabelecimento/perfil");
+  }
+
+  await updateApplicationStatusForEstablishment({
+    applicationId,
+    establishmentId: profile.id,
+    status: "REJECTED",
+  });
+
+  revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
+  revalidatePath("/app/freelancer/candidaturas");
 }

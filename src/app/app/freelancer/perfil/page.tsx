@@ -1,5 +1,9 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 import { FreelancerProfileForm } from "@/components/forms/freelancer-profile-form";
 import { AppHeader } from "@/components/layout/app-header";
+import { Button } from "@/components/ui/button";
 import {
   getActiveSpecialties,
   getFreelancerAvailability,
@@ -21,12 +25,20 @@ export default async function FreelancerProfilePage() {
     <main className="min-h-screen bg-muted/30 text-foreground">
       <AppHeader title="Perfil do freelancer" userName={user.name} />
       <section className="mx-auto grid max-w-6xl gap-5 px-5 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-normal">Meu perfil</h1>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Mantenha seus dados atualizados para se candidatar e receber contato
-            apos o aceite.
-          </p>
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-normal">Meu perfil</h1>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Mantenha seus dados atualizados para se candidatar e receber contato
+              apos o aceite.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/app/freelancer">
+              <ArrowLeft className="size-4" />
+              Acessar area do freelancer
+            </Link>
+          </Button>
         </div>
         <FreelancerProfileForm
           user={user}

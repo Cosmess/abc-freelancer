@@ -256,6 +256,7 @@ export async function replaceFreelancerAvailability(input: {
 
   const now = new Date().toISOString();
   const shiftTimes: Record<string, { startTime: string; endTime: string }> = {
+    madrugada: { startTime: "00:00", endTime: "06:00" },
     manha: { startTime: "06:00", endTime: "12:00" },
     tarde: { startTime: "12:00", endTime: "18:00" },
     noite: { startTime: "18:00", endTime: "23:59" },

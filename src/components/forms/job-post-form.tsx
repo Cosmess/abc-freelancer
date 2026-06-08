@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
 import { Button } from "@/components/ui/button";
+import { fillAddressFromCep } from "@/lib/address/cep-lookup";
 import type { Specialty } from "@/lib/profiles/profile-store";
 import type { ProfileActionState } from "@/lib/profiles/validators";
 import { createJobPostAction } from "@/server/actions/jobs";
@@ -48,7 +49,7 @@ export function JobPostForm({ specialties }: { specialties: Specialty[] }) {
       <div className="grid gap-4 md:grid-cols-3">
         <ProfileField label="Cidade" name="city" required error={state.errors?.city} />
         <ProfileField label="Bairro" name="neighborhood" error={state.errors?.neighborhood} />
-        <ProfileField label="CEP" name="cep" error={state.errors?.cep} />
+        <ProfileField label="CEP" name="cep" error={state.errors?.cep} lookupCep />
         <ProfileField label="Rua" name="street" error={state.errors?.street} />
         <ProfileField label="Numero" name="number" error={state.errors?.number} />
         <ProfileField label="Data" name="workDate" type="date" required error={state.errors?.workDate} />
@@ -89,6 +90,7 @@ function ProfileField({
   required = false,
   defaultValue,
   step,
+  lookupCep = false,
 }: {
   label: string;
   name: string;
@@ -97,6 +99,7 @@ function ProfileField({
   required?: boolean;
   defaultValue?: string;
   step?: string;
+  lookupCep?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -108,6 +111,11 @@ function ProfileField({
         required={required}
         defaultValue={defaultValue}
         step={step}
+        onBlur={(event) => {
+          if (lookupCep) {
+            void fillAddressFromCep(event.currentTarget.form!, event.currentTarget.value);
+          }
+        }}
       />
       <FieldError errors={error} />
     </label>

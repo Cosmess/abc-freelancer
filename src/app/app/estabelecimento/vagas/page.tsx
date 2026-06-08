@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ClipboardList, Plus } from "lucide-react";
+import { ArrowLeft, ClipboardList, Plus, Trash2, Users } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { getJobPostsByEstablishment } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
+import { deleteJobPostAction } from "@/server/actions/jobs";
 import { requireEstablishment } from "@/server/guards/auth";
 
 export default async function EstablishmentJobsPage() {
@@ -22,22 +23,30 @@ export default async function EstablishmentJobsPage() {
               Minhas vagas
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Crie vagas para freelancers e acompanhe o status das oportunidades.
+              Crie vagas, acompanhe candidatos e exclua oportunidades encerradas.
             </p>
           </div>
-          <Button asChild>
-            <Link href="/app/estabelecimento/vagas/nova">
-              <Plus className="size-4" />
-              Nova vaga
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href="/app/estabelecimento">
+                <ArrowLeft className="size-4" />
+                Voltar ao painel
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/app/estabelecimento/vagas/nova">
+                <Plus className="size-4" />
+                Nova vaga
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-md border bg-background shadow-sm">
           {jobs.length ? (
             <div className="divide-y">
               {jobs.map((job) => (
-                <article key={job.id} className="grid gap-2 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                <article key={job.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div>
                     <h2 className="font-medium">{job.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -46,10 +55,24 @@ export default async function EstablishmentJobsPage() {
                       {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
                       {job.startTime} as {job.endTime}
                     </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
+                      {job.quantity} vaga(s) - {job.status}
+                    </p>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} ·{" "}
-                    {job.quantity} vaga(s) · {job.status}
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline">
+                      <Link href={`/app/estabelecimento/vagas/${job.id}/candidatos`}>
+                        <Users className="size-4" />
+                        Candidatos
+                      </Link>
+                    </Button>
+                    <form action={deleteJobPostAction.bind(null, job.id)}>
+                      <Button variant="destructive" type="submit">
+                        <Trash2 className="size-4" />
+                        Excluir
+                      </Button>
+                    </form>
                   </div>
                 </article>
               ))}

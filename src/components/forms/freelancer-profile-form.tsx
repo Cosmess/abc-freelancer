@@ -5,6 +5,7 @@ import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
 import { Button } from "@/components/ui/button";
+import { fillAddressFromCep } from "@/lib/address/cep-lookup";
 import type { InternalUser } from "@/lib/auth/internal-user-store";
 import type { Availability, FreelancerProfile, Specialty } from "@/lib/profiles/profile-store";
 import type { ProfileActionState } from "@/lib/profiles/validators";
@@ -31,12 +32,14 @@ const days = [
 ] as const;
 
 const shifts = [
+  ["madrugada", "Madrugada", "00:00-06:00"],
   ["manha", "Manha", "06:00-12:00"],
   ["tarde", "Tarde", "12:00-18:00"],
   ["noite", "Noite", "18:00-23:59"],
 ] as const;
 
 function getShiftFromTime(startTime: string) {
+  if (startTime === "00:00") return "madrugada";
   if (startTime === "06:00") return "manha";
   if (startTime === "12:00") return "tarde";
   return "noite";
@@ -80,7 +83,7 @@ export function FreelancerProfileForm({
         <ProfileField label="Cidade" name="city" value={profile?.city ?? ""} error={state.errors?.city} />
         <ProfileField label="Bairro" name="neighborhood" value={profile?.neighborhood ?? ""} error={state.errors?.neighborhood} />
         <ProfileField label="Rua" name="street" value={profile?.street ?? ""} error={state.errors?.street} />
-        <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} />
+        <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} lookupCep />
         <ProfileField label="URL da foto" name="profilePhotoUrl" value={profile?.profilePhotoUrl ?? ""} error={state.errors?.profilePhotoUrl} />
       </div>
 
@@ -122,7 +125,7 @@ export function FreelancerProfileForm({
         <div>
           <h2 className="text-sm font-medium">Dias e horarios de preferencia</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Use manha, tarde e noite para indicar disponibilidade recorrente.
+            Use madrugada, manha, tarde e noite para indicar disponibilidade recorrente.
           </p>
         </div>
         <div className="overflow-x-auto rounded-md border">
@@ -174,6 +177,7 @@ function ProfileField({
   error,
   type = "text",
   required = false,
+  lookupCep = false,
 }: {
   label: string;
   name: string;
@@ -181,6 +185,7 @@ function ProfileField({
   error?: string[];
   type?: string;
   required?: boolean;
+  lookupCep?: boolean;
 }) {
   return (
     <label className="grid gap-2 text-sm font-medium">
@@ -191,6 +196,11 @@ function ProfileField({
         type={type}
         defaultValue={value}
         required={required}
+        onBlur={(event) => {
+          if (lookupCep) {
+            void fillAddressFromCep(event.currentTarget.form!, event.currentTarget.value);
+          }
+        }}
       />
       <FieldError errors={error} />
     </label>

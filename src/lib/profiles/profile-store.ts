@@ -373,3 +373,198 @@ export async function upsertEstablishmentProfile(input: {
     throw error;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Freelancer catalog
+// ---------------------------------------------------------------------------
+
+export const CATALOG_PAGE_SIZE = 12;
+
+const DAY_ABBREVIATIONS: Record<string, string> = {
+  MONDAY: "Seg",
+  TUESDAY: "Ter",
+  WEDNESDAY: "Qua",
+  THURSDAY: "Qui",
+  FRIDAY: "Sex",
+  SATURDAY: "Sab",
+  SUNDAY: "Dom",
+};
+
+const SHIFT_LABELS: Record<string, string> = {
+  "00:00": "Madrugada",
+  "06:00": "Manha",
+  "12:00": "Tarde",
+  "18:00": "Noite",
+};
+
+const SHIFT_START_TIMES: Record<string, string> = {
+  madrugada: "00:00",
+  manha: "06:00",
+  tarde: "12:00",
+  noite: "18:00",
+};
+
+export type FreelancerCatalogItem = {
+  id: string;
+  fullName: string;
+  city: string | null;
+  neighborhood: string | null;
+  bio: string | null;
+  profilePhotoUrl: string | null;
+  instagram: string | null;
+  specialties: Array<{ id: string; name: string }>;
+  shifts: string[];
+};
+
+export type FreelancerCatalogResult = {
+  items: FreelancerCatalogItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export async function getFreelancerCatalog(input: {
+  city?: string;
+  specialtyId?: string;
+  shift?: string;
+  page?: number;
+}): Promise<FreelancerCatalogResult> {
+  const supabase = getSupabaseAdminClient();
+  const page = Math.max(1, input.page ?? 1);
+
+  // Collect ID constraints from relational filters
+  const idSets: Set<string>[] = [];
+
+  if (input.specialtyId) {
+    const { data } = await supabase
+      .from("FreelancerSpecialty")
+      .select("freelancerId")
+      .eq("specialtyId", input.specialtyId)
+      .returns<Array<{ freelancerId: string }>>();
+    idSets.push(new Set((data ?? []).map((r) => r.freelancerId)));
+  }
+
+  if (input.shift && SHIFT_START_TIMES[input.shift]) {
+    const { data } = await supabase
+      .from("Availability")
+      .select("freelancerId")
+      .eq("startTime", SHIFT_START_TIMES[input.shift])
+      .eq("available", true)
+      .returns<Array<{ freelancerId: string }>>();
+    idSets.push(new Set((data ?? []).map((r) => r.freelancerId)));
+  }
+
+  // Intersect all ID sets — early-out if any set is empty
+  let allowedIds: string[] | null = null;
+  if (idSets.length > 0) {
+    const intersected = idSets.reduce((acc, cur) => {
+      const next = new Set<string>();
+      acc.forEach((id) => { if (cur.has(id)) next.add(id); });
+      return next;
+    });
+    if (intersected.size === 0) {
+      return { items: [], total: 0, page, pageSize: CATALOG_PAGE_SIZE, totalPages: 0 };
+    }
+    allowedIds = Array.from(intersected);
+  }
+
+  // Main query with count
+  let query = supabase
+    .from("FreelancerProfile")
+    .select("id,fullName,city,neighborhood,bio,profilePhotoUrl,instagram", { count: "exact" })
+    .eq("status", "APPROVED")
+    .order("fullName", { ascending: true })
+    .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
+
+  if (input.city) {
+    query = query.ilike("city", `%${input.city}%`);
+  }
+
+  if (allowedIds) {
+    query = query.in("id", allowedIds);
+  }
+
+  const { data: profiles, error, count } = await query.returns<
+    Array<{
+      id: string;
+      fullName: string;
+      city: string | null;
+      neighborhood: string | null;
+      bio: string | null;
+      profilePhotoUrl: string | null;
+      instagram: string | null;
+    }>
+  >();
+
+  if (error) throw error;
+
+  const freelancerIds = (profiles ?? []).map((p) => p.id);
+
+  if (!freelancerIds.length) {
+    const total = count ?? 0;
+    return { items: [], total, page, pageSize: CATALOG_PAGE_SIZE, totalPages: Math.ceil(total / CATALOG_PAGE_SIZE) };
+  }
+
+  // Batch-load specialties and availability
+  const [specialtyRows, availabilityRows] = await Promise.all([
+    supabase
+      .from("FreelancerSpecialty")
+      .select("freelancerId,specialtyId")
+      .in("freelancerId", freelancerIds)
+      .returns<Array<{ freelancerId: string; specialtyId: string }>>(),
+    supabase
+      .from("Availability")
+      .select("freelancerId,dayOfWeek,startTime")
+      .in("freelancerId", freelancerIds)
+      .eq("available", true)
+      .returns<Array<{ freelancerId: string; dayOfWeek: string; startTime: string }>>(),
+  ]);
+
+  // Resolve specialty names
+  const uniqueSpecialtyIds = Array.from(new Set((specialtyRows.data ?? []).map((r) => r.specialtyId)));
+  let specialtyNameMap = new Map<string, string>();
+
+  if (uniqueSpecialtyIds.length) {
+    const { data: names } = await supabase
+      .from("Specialty")
+      .select("id,name")
+      .in("id", uniqueSpecialtyIds)
+      .returns<Array<{ id: string; name: string }>>();
+    specialtyNameMap = new Map((names ?? []).map((s) => [s.id, s.name]));
+  }
+
+  // Group per freelancer
+  const specialtiesByFreelancer = new Map<string, Array<{ id: string; name: string }>>();
+  (specialtyRows.data ?? []).forEach((row) => {
+    const name = specialtyNameMap.get(row.specialtyId);
+    if (!name) return;
+    const list = specialtiesByFreelancer.get(row.freelancerId) ?? [];
+    list.push({ id: row.specialtyId, name });
+    specialtiesByFreelancer.set(row.freelancerId, list);
+  });
+
+  const shiftsByFreelancer = new Map<string, string[]>();
+  (availabilityRows.data ?? []).forEach((row) => {
+    const day = DAY_ABBREVIATIONS[row.dayOfWeek] ?? row.dayOfWeek;
+    const shift = SHIFT_LABELS[row.startTime] ?? row.startTime;
+    const list = shiftsByFreelancer.get(row.freelancerId) ?? [];
+    list.push(`${day} ${shift}`);
+    shiftsByFreelancer.set(row.freelancerId, list);
+  });
+
+  const total = count ?? 0;
+
+  return {
+    items: (profiles ?? []).map((profile) => ({
+      ...profile,
+      instagram: profile.instagram ?? null,
+      specialties: specialtiesByFreelancer.get(profile.id) ?? [],
+      shifts: shiftsByFreelancer.get(profile.id) ?? [],
+    })),
+    total,
+    page,
+    pageSize: CATALOG_PAGE_SIZE,
+    totalPages: Math.ceil(total / CATALOG_PAGE_SIZE),
+  };
+}

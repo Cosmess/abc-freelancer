@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, UsersRound } from "lucide-react";
+import { Building2, ClipboardList, Users, UsersRound } from "lucide-react";
 import Link from "next/link";
 
 import { AppHeader } from "@/components/layout/app-header";
@@ -25,7 +25,8 @@ export default async function EstablishmentDashboardPage() {
           {[
             ["Perfil", "Revise os dados do estabelecimento.", Building2, "/app/estabelecimento/perfil"],
             ["Vagas", "Publique e gerencie oportunidades.", ClipboardList, "/app/estabelecimento/vagas"],
-            ["Catalogo", "Veja a area logada de estabelecimentos.", UsersRound, "/estabelecimentos"],
+            ["Freelancers", "Busque profissionais disponiveis.", Users, "/freelancers"],
+            ["Estabelecimentos", "Veja o catalogo de estabelecimentos.", UsersRound, "/estabelecimentos"],
           ].map(([title, description, Icon, href]) => (
             <article key={title as string} className="rounded-lg border bg-card p-5 shadow-sm">
               <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-primary/15">

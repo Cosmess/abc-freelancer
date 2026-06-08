@@ -4,6 +4,7 @@ import { ArrowLeft, ClipboardList, MapPin, MessageCircle } from "lucide-react";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
+import { RefreshButton } from "@/components/ui/refresh-button";
 import {
   formatJobAddress,
   formatJobSchedule,
@@ -36,12 +37,15 @@ export default async function FreelancerApplicationsPage() {
               O WhatsApp do estabelecimento aparece apenas quando a candidatura for aceita.
             </p>
           </div>
-          <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link href="/app/freelancer">
-              <ArrowLeft className="size-4" />
-              Area do freelancer
-            </Link>
-          </Button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <RefreshButton />
+            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+              <Link href="/app/freelancer">
+                <ArrowLeft className="size-4" />
+                Area do freelancer
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-lg border bg-card shadow-sm">

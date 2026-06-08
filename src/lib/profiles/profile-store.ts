@@ -579,6 +579,9 @@ export type EstablishmentCatalogItem = {
   type: string | null;
   city: string | null;
   neighborhood: string | null;
+  street: string | null;
+  number: string | null;
+  cep: string | null;
   description: string | null;
   profilePhotoUrl: string | null;
   instagram: string | null;
@@ -603,7 +606,7 @@ export async function getEstablishmentCatalog(input: {
 
   let query = supabase
     .from("EstablishmentProfile")
-    .select("id,tradeName,type,city,neighborhood,description,profilePhotoUrl,instagram", { count: "exact" })
+    .select("id,tradeName,type,city,neighborhood,street,number,cep,description,profilePhotoUrl,instagram", { count: "exact" })
     .neq("status", "BLOCKED")
     .order("tradeName", { ascending: true })
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
@@ -627,6 +630,9 @@ export async function getEstablishmentCatalog(input: {
       type: string | null;
       city: string | null;
       neighborhood: string | null;
+      street: string | null;
+      number: string | null;
+      cep: string | null;
       description: string | null;
       profilePhotoUrl: string | null;
       instagram: string | null;

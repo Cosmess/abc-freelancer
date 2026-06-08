@@ -212,16 +212,31 @@ type EstablishmentCatalogItem = {
   type: string | null;
   city: string | null;
   neighborhood: string | null;
+  street: string | null;
+  number: string | null;
+  cep: string | null;
   description: string | null;
   profilePhotoUrl: string | null;
   instagram: string | null;
 };
 
+function formatAddress(item: EstablishmentCatalogItem): string | null {
+  const parts = [
+    [item.street, item.number].filter(Boolean).join(", "),
+    item.neighborhood,
+    item.city,
+    item.cep ? `CEP ${item.cep}` : null,
+  ].filter(Boolean);
+
+  return parts.length > 0 ? parts.join(" — ") : null;
+}
+
 function EstablishmentCard({ establishment }: CardProps) {
   const instagramUrl = getInstagramUrl(establishment.instagram);
+  const address = formatAddress(establishment);
 
   return (
-    <article className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-card/80">
+    <article className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-card/80">
       {/* Logo + name */}
       <div className="flex items-center gap-3">
         <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-lg font-bold text-muted-foreground">
@@ -259,6 +274,13 @@ function EstablishmentCard({ establishment }: CardProps) {
       {establishment.description && (
         <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
           {establishment.description}
+        </p>
+      )}
+
+      {/* Address */}
+      {address && (
+        <p className="text-xs leading-5 text-muted-foreground">
+          📍 {address}
         </p>
       )}
 

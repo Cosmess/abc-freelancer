@@ -4,6 +4,7 @@ import { ArrowLeft, Check, ClipboardList, MessageCircle, X } from "lucide-react"
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
+import { RefreshButton } from "@/components/ui/refresh-button";
 import {
   formatJobAddress,
   formatJobSchedule,
@@ -65,12 +66,15 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
               {getJobStatusLabel(job.status)}
             </p>
           </div>
-          <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link href="/app/estabelecimento/vagas">
-              <ArrowLeft className="size-4" />
-              Voltar para vagas
-            </Link>
-          </Button>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <RefreshButton />
+            <Button asChild variant="outline" className="flex-1 sm:flex-none">
+              <Link href="/app/estabelecimento/vagas">
+                <ArrowLeft className="size-4" />
+                Voltar para vagas
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-lg border bg-card shadow-sm">

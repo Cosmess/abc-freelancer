@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
+import { ProfilePhotoInput } from "@/components/forms/profile-photo-input";
 import { Button } from "@/components/ui/button";
 import { fillAddressFromCep } from "@/lib/address/cep-lookup";
 import type { InternalUser } from "@/lib/auth/internal-user-store";
@@ -84,8 +85,9 @@ export function FreelancerProfileForm({
         <ProfileField label="Bairro" name="neighborhood" value={profile?.neighborhood ?? ""} error={state.errors?.neighborhood} />
         <ProfileField label="Rua" name="street" value={profile?.street ?? ""} error={state.errors?.street} />
         <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} lookupCep />
-        <ProfileField label="URL da foto" name="profilePhotoUrl" value={profile?.profilePhotoUrl ?? ""} error={state.errors?.profilePhotoUrl} />
       </div>
+
+      <ProfilePhotoInput currentUrl={profile?.profilePhotoUrl} />
 
       <label className="grid gap-2 text-sm font-medium">
         Bio

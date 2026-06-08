@@ -45,6 +45,7 @@ export type EstablishmentProfile = {
   email: string | null;
   type: string | null;
   description: string | null;
+  profilePhotoUrl: string | null;
   status: string;
   cep: string | null;
   state: string | null;
@@ -308,6 +309,7 @@ export async function upsertEstablishmentProfile(input: {
   email?: string | null;
   type?: string | null;
   description?: string | null;
+  profilePhotoUrl?: string | null;
   cep?: string | null;
   state?: string | null;
   city?: string | null;
@@ -326,6 +328,7 @@ export async function upsertEstablishmentProfile(input: {
     email: input.email || null,
     type: input.type || null,
     description: input.description || null,
+    profilePhotoUrl: input.profilePhotoUrl || null,
     cep: input.cep || null,
     state: input.state || null,
     city: input.city || null,

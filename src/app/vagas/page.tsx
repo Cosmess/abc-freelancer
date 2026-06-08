@@ -109,11 +109,20 @@ export default async function JobsPage({ searchParams }: Props) {
             <div className="divide-y">
               {jobs.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-start">
-                  <div>
-                    <h2 className="font-medium">{job.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {job.establishmentName} - {job.specialtyName}
-                    </p>
+                  <div className="flex gap-4">
+                    <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                      {job.establishmentPhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={job.establishmentPhotoUrl} alt="" className="size-full object-cover" />
+                      ) : (
+                        job.establishmentName.slice(0, 1).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="font-medium">{job.title}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {job.establishmentName} - {job.specialtyName}
+                      </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {formatJobSchedule(job)}
                     </p>
@@ -130,6 +139,7 @@ export default async function JobsPage({ searchParams }: Props) {
                         Requisitos: {job.requirements}
                       </p>
                     ) : null}
+                    </div>
                   </div>
                   <div className="grid gap-2 text-sm text-muted-foreground lg:min-w-48">
                     <div>

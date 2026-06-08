@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
+import { ProfilePhotoInput } from "@/components/forms/profile-photo-input";
 import { Button } from "@/components/ui/button";
 import { fillAddressFromCep } from "@/lib/address/cep-lookup";
 import type { InternalUser } from "@/lib/auth/internal-user-store";
@@ -55,6 +56,11 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
         <ProfileField label="Numero" name="number" value={profile?.number ?? ""} error={state.errors?.number} />
         <ProfileField label="Complemento" name="complement" value={profile?.complement ?? ""} error={state.errors?.complement} />
       </div>
+
+      <ProfilePhotoInput
+        currentUrl={profile?.profilePhotoUrl}
+        label="Foto ou logo do estabelecimento"
+      />
 
       <label className="grid gap-2 text-sm font-medium">
         Descricao

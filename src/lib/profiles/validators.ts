@@ -27,6 +27,7 @@ export const establishmentProfileSchema = z.object({
   email: z.email("Informe um email valido.").trim().optional().or(z.literal("")),
   type: optionalText,
   description: optionalText,
+  profilePhotoUrl: optionalText,
   cep: optionalText,
   state: optionalText,
   city: optionalText,

@@ -37,6 +37,7 @@ export type JobApplication = {
 
 export type JobListing = JobPost & {
   establishmentName: string;
+  establishmentPhotoUrl: string | null;
   specialtyName: string;
   applicationStatus?: string | null;
 };
@@ -59,6 +60,7 @@ export type EstablishmentApplicationListing = JobApplication & {
     fullName: string;
     email: string | null;
     whatsapp: string | null;
+    profilePhotoUrl: string | null;
     city: string | null;
     neighborhood: string | null;
     bio: string | null;
@@ -98,14 +100,21 @@ async function getSpecialtyNames(ids: string[]) {
 
 async function getEstablishments(ids: string[]) {
   if (!ids.length) {
-    return new Map<string, { tradeName: string; whatsapp: string | null }>();
+    return new Map<string, { tradeName: string; whatsapp: string | null; profilePhotoUrl: string | null }>();
   }
 
   const { data, error } = await getSupabaseAdminClient()
     .from("EstablishmentProfile")
-    .select("id,tradeName,whatsapp")
+    .select("id,tradeName,whatsapp,profilePhotoUrl")
     .in("id", Array.from(new Set(ids)))
-    .returns<Array<{ id: string; tradeName: string; whatsapp: string | null }>>();
+    .returns<
+      Array<{
+        id: string;
+        tradeName: string;
+        whatsapp: string | null;
+        profilePhotoUrl: string | null;
+      }>
+    >();
 
   if (error) {
     throw error;
@@ -114,7 +123,11 @@ async function getEstablishments(ids: string[]) {
   return new Map(
     (data ?? []).map((item) => [
       item.id,
-      { tradeName: item.tradeName, whatsapp: item.whatsapp },
+      {
+        tradeName: item.tradeName,
+        whatsapp: item.whatsapp,
+        profilePhotoUrl: item.profilePhotoUrl,
+      },
     ]),
   );
 }
@@ -235,6 +248,7 @@ export async function getOpenJobListings(input: {
   return jobs.map((job) => ({
     ...job,
     establishmentName: establishments.get(job.establishmentId)?.tradeName ?? "Estabelecimento",
+    establishmentPhotoUrl: establishments.get(job.establishmentId)?.profilePhotoUrl ?? null,
     specialtyName: specialtyNames.get(job.specialtyId) ?? "Especialidade",
     applicationStatus: applications.get(job.id) ?? null,
   }));
@@ -417,7 +431,7 @@ export async function getApplicationsByJobForEstablishment(input: {
 
   const { data: freelancers, error: freelancersError } = await getSupabaseAdminClient()
     .from("FreelancerProfile")
-    .select("id,fullName,email,whatsapp,city,neighborhood,bio,experience")
+    .select("id,fullName,email,whatsapp,profilePhotoUrl,city,neighborhood,bio,experience")
     .in("id", freelancerIds)
     .returns<
       Array<{
@@ -425,6 +439,7 @@ export async function getApplicationsByJobForEstablishment(input: {
         fullName: string;
         email: string | null;
         whatsapp: string | null;
+        profilePhotoUrl: string | null;
         city: string | null;
         neighborhood: string | null;
         bio: string | null;

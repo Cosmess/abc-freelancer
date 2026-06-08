@@ -78,18 +78,34 @@ export default async function EstablishmentJobCandidatesPage({ params }: Props) 
               {applications.map((application) => (
                 <article key={application.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto]">
                   <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-medium">{application.freelancer.fullName}</h2>
-                      <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
-                        {getApplicationStatusLabel(application.status)}
-                      </span>
+                    <div className="flex gap-4">
+                      <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                        {application.freelancer.profilePhotoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={application.freelancer.profilePhotoUrl}
+                            alt=""
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          application.freelancer.fullName.slice(0, 1).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h2 className="font-medium">{application.freelancer.fullName}</h2>
+                          <span className="rounded-md border px-2 py-1 text-xs text-muted-foreground">
+                            {getApplicationStatusLabel(application.status)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {application.freelancer.city ?? "Cidade nao informada"}
+                          {application.freelancer.neighborhood
+                            ? `, ${application.freelancer.neighborhood}`
+                            : ""}
+                        </p>
+                      </div>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {application.freelancer.city ?? "Cidade nao informada"}
-                      {application.freelancer.neighborhood
-                        ? `, ${application.freelancer.neighborhood}`
-                        : ""}
-                    </p>
                     {application.freelancer.specialties.length ? (
                       <p className="mt-2 text-sm text-muted-foreground">
                         Especialidades: {application.freelancer.specialties.join(", ")}

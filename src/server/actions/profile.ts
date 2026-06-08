@@ -14,6 +14,7 @@ import {
   upsertEstablishmentProfile,
   upsertFreelancerProfile,
 } from "@/lib/profiles/profile-store";
+import { uploadProfilePhoto } from "@/lib/storage/profile-photos";
 import { requireEstablishment, requireFreelancer } from "@/server/guards/auth";
 
 function flattenErrors(error: {
@@ -45,6 +46,24 @@ function getErrorMessage(error: unknown): string {
   return "Nao foi possivel salvar o perfil.";
 }
 
+async function uploadProfilePhotoFromForm(input: {
+  formData: FormData;
+  ownerId: string;
+  folder: "freelancers" | "establishments";
+}) {
+  const file = input.formData.get("profilePhotoFile");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return null;
+  }
+
+  return uploadProfilePhoto({
+    file,
+    ownerId: input.ownerId,
+    folder: input.folder,
+  });
+}
+
 export async function updateFreelancerProfileAction(
   _state: ProfileActionState,
   formData: FormData,
@@ -57,6 +76,11 @@ export async function updateFreelancerProfileAction(
   }
 
   try {
+    const profilePhotoUrl = await uploadProfilePhotoFromForm({
+      formData,
+      ownerId: user.id,
+      folder: "freelancers",
+    });
     await updateUserBasics({
       userId: user.id,
       name: parsed.data.fullName,
@@ -74,7 +98,7 @@ export async function updateFreelancerProfileAction(
       cep: cleanDocument(parsed.data.cep),
       bio: parsed.data.bio,
       experience: parsed.data.experience,
-      profilePhotoUrl: parsed.data.profilePhotoUrl,
+      profilePhotoUrl: profilePhotoUrl ?? parsed.data.profilePhotoUrl,
     });
     await replaceFreelancerSpecialties({
       freelancerId: profile.id,
@@ -108,6 +132,11 @@ export async function updateEstablishmentProfileAction(
   }
 
   try {
+    const profilePhotoUrl = await uploadProfilePhotoFromForm({
+      formData,
+      ownerId: user.id,
+      folder: "establishments",
+    });
     await updateUserBasics({
       userId: user.id,
       name: parsed.data.responsibleName,
@@ -122,6 +151,7 @@ export async function updateEstablishmentProfileAction(
       email: parsed.data.email,
       type: parsed.data.type,
       description: parsed.data.description,
+      profilePhotoUrl: profilePhotoUrl ?? parsed.data.profilePhotoUrl,
       cep: cleanDocument(parsed.data.cep),
       state: parsed.data.state,
       city: parsed.data.city,

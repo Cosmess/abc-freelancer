@@ -49,6 +49,7 @@ export type EstablishmentJobPost = JobPost & {
 export type FreelancerApplicationListing = JobApplication & {
   job: JobPost;
   establishmentName: string;
+  establishmentPhotoUrl: string | null;
   establishmentWhatsapp: string | null;
   specialtyName: string;
 };
@@ -393,6 +394,7 @@ export async function getFreelancerApplications(freelancerId: string) {
         ...application,
         job,
         establishmentName: establishment?.tradeName ?? "Estabelecimento",
+        establishmentPhotoUrl: establishment?.profilePhotoUrl ?? null,
         establishmentWhatsapp:
           application.status === "ACCEPTED" ? establishment?.whatsapp ?? null : null,
         specialtyName: specialtyNames.get(job.specialtyId) ?? "Especialidade",
@@ -539,14 +541,22 @@ export async function updateApplicationStatusForEstablishment(input: {
     throw error;
   }
 
-  if (input.status === "ACCEPTED") {
+  if (input.status === "REJECTED" && job.status === "FINISHED") {
     const acceptedCounts = await getAcceptedApplicationCounts([job.id]);
 
-    if ((acceptedCounts.get(job.id) ?? 0) >= job.quantity) {
-      await closeJobPostForEstablishment({
-        jobPostId: job.id,
-        establishmentId: input.establishmentId,
-      });
+    if ((acceptedCounts.get(job.id) ?? 0) === 0 && isFutureOrTodayJob(job)) {
+      const { error: reopenError } = await getSupabaseAdminClient()
+        .from("JobPost")
+        .update({
+          status: "OPEN",
+          updatedAt: new Date().toISOString(),
+        })
+        .eq("id", job.id)
+        .eq("establishmentId", input.establishmentId);
+
+      if (reopenError) {
+        throw reopenError;
+      }
     }
   }
 }

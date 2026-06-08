@@ -130,6 +130,7 @@ export async function acceptApplicationAction(applicationId: string, jobPostId: 
     status: "ACCEPTED",
   });
 
+  revalidatePath("/vagas");
   revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
   revalidatePath("/app/freelancer/candidaturas");
 }
@@ -148,6 +149,7 @@ export async function rejectApplicationAction(applicationId: string, jobPostId: 
     status: "REJECTED",
   });
 
+  revalidatePath("/vagas");
   revalidatePath(`/app/estabelecimento/vagas/${jobPostId}/candidatos`);
   revalidatePath("/app/freelancer/candidaturas");
 }

@@ -48,32 +48,46 @@ export default async function FreelancerApplicationsPage() {
             <div className="divide-y">
               {applications.map((application) => (
                 <article key={application.id} className="grid gap-3 p-4 md:grid-cols-[1fr_auto]">
-                  <div>
-                    <h2 className="font-medium">{application.job.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {application.establishmentName} - {application.specialtyName}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatJobSchedule(application.job)}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Endereco: {formatJobAddress(application.job)}
-                    </p>
-                    {application.job.description ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        {application.job.description}
+                  <div className="flex gap-4">
+                    <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                      {application.establishmentPhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={application.establishmentPhotoUrl}
+                          alt=""
+                          className="size-full object-cover"
+                        />
+                      ) : (
+                        application.establishmentName.slice(0, 1).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="font-medium">{application.job.title}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {application.establishmentName} - {application.specialtyName}
                       </p>
-                    ) : null}
-                    {application.job.requirements ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                        Requisitos: {application.job.requirements}
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatJobSchedule(application.job)}
                       </p>
-                    ) : null}
-                    {application.establishmentWhatsapp ? (
-                      <p className="mt-2 text-sm font-medium">
-                        WhatsApp liberado: {application.establishmentWhatsapp}
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Endereco: {formatJobAddress(application.job)}
                       </p>
-                    ) : null}
+                      {application.job.description ? (
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                          {application.job.description}
+                        </p>
+                      ) : null}
+                      {application.job.requirements ? (
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                          Requisitos: {application.job.requirements}
+                        </p>
+                      ) : null}
+                      {application.establishmentWhatsapp ? (
+                        <p className="mt-2 text-sm font-medium">
+                          WhatsApp liberado: {application.establishmentWhatsapp}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="grid gap-2 md:min-w-44">
                     <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">

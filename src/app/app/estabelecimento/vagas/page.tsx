@@ -48,23 +48,33 @@ export default async function EstablishmentJobsPage() {
             <div className="divide-y">
               {jobs.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
-                  <div>
-                    <h2 className="font-medium">{job.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {job.city}
-                      {job.neighborhood ? `, ${job.neighborhood}` : ""} -{" "}
-                      {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
-                      {job.startTime} as {job.endTime}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
-                      {job.quantity} vaga(s) - {getJobStatusLabel(job.status)}
-                    </p>
-                    {job.acceptedApplicationCount > 0 ? (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {job.acceptedApplicationCount} aceite(s). Esta vaga nao pode ser excluida.
+                  <div className="flex gap-4">
+                    <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted text-sm font-medium text-muted-foreground">
+                      {profile?.profilePhotoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profile.profilePhotoUrl} alt="" className="size-full object-cover" />
+                      ) : (
+                        profile?.tradeName.slice(0, 1).toUpperCase() ?? "E"
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="font-medium">{job.title}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {job.city}
+                        {job.neighborhood ? `, ${job.neighborhood}` : ""} -{" "}
+                        {new Date(job.workDate).toLocaleDateString("pt-BR")} das{" "}
+                        {job.startTime} as {job.endTime}
                       </p>
-                    ) : null}
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        R$ {(job.paymentValue / 100).toFixed(2).replace(".", ",")} -{" "}
+                        {job.quantity} vaga(s) - {getJobStatusLabel(job.status)}
+                      </p>
+                      {job.acceptedApplicationCount > 0 ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {job.acceptedApplicationCount} aceite(s). Esta vaga nao pode ser excluida.
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="outline">

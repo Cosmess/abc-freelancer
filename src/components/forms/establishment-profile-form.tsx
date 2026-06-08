@@ -26,26 +26,26 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
   );
 
   return (
-    <form action={formAction} className="grid gap-4 rounded-md border bg-background p-5 shadow-sm">
+    <form action={formAction} className="grid gap-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
       {state.message ? (
         <div
           className={
             state.success
-              ? "rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700"
-              : "rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              ? "rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-400"
+              : "rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
           }
         >
           {state.message}
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <ProfileField label="Responsavel" name="responsibleName" value={user.name} required error={state.errors?.responsibleName} />
         <ProfileField label="Telefone" name="phone" value={user.phone ?? ""} error={state.errors?.phone} />
         <ProfileField label="Nome fantasia" name="tradeName" value={profile?.tradeName ?? ""} required error={state.errors?.tradeName} />
         <ProfileField label="Razao social" name="legalName" value={profile?.legalName ?? ""} error={state.errors?.legalName} />
         <ProfileField label="CNPJ" name="cnpj" value={profile?.cnpj ?? ""} required error={state.errors?.cnpj} />
-        <ProfileField label="Tipo" name="type" value={profile?.type ?? ""} error={state.errors?.type} />
+        <ProfileField label="Tipo de estabelecimento" name="type" value={profile?.type ?? ""} error={state.errors?.type} />
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
         <ProfileField label="WhatsApp" name="whatsapp" value={profile?.whatsapp ?? ""} error={state.errors?.whatsapp} />
         <ProfileField label="CEP" name="cep" value={profile?.cep ?? ""} error={state.errors?.cep} lookupCep />
@@ -62,13 +62,17 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
         label="Foto ou logo do estabelecimento"
       />
 
-      <label className="grid gap-2 text-sm font-medium">
+      <label className="grid gap-1.5 text-sm font-medium">
         Descricao
-        <textarea className="min-h-28 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" name="description" defaultValue={profile?.description ?? ""} />
+        <textarea
+          className="min-h-28 rounded-md border bg-input px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:text-sm"
+          name="description"
+          defaultValue={profile?.description ?? ""}
+        />
         <FieldError errors={state.errors?.description} />
       </label>
 
-      <Button className="w-fit" disabled={pending} type="submit">
+      <Button className="w-full sm:w-fit" disabled={pending} type="submit">
         <Save className="size-4" />
         {pending ? "Salvando..." : "Salvar perfil"}
       </Button>
@@ -94,10 +98,10 @@ function ProfileField({
   lookupCep?: boolean;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-medium">
+    <label className="grid gap-1.5 text-sm font-medium">
       {label}
       <input
-        className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
         name={name}
         type={type}
         defaultValue={value}

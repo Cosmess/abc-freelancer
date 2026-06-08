@@ -33,10 +33,10 @@ const days = [
 ] as const;
 
 const shifts = [
-  ["madrugada", "Madrugada", "00:00-06:00"],
-  ["manha", "Manha", "06:00-12:00"],
-  ["tarde", "Tarde", "12:00-18:00"],
-  ["noite", "Noite", "18:00-23:59"],
+  ["madrugada", "Madrugada", "00:00–06:00"],
+  ["manha", "Manha", "06:00–12:00"],
+  ["tarde", "Tarde", "12:00–18:00"],
+  ["noite", "Noite", "18:00–23:59"],
 ] as const;
 
 function getShiftFromTime(startTime: string) {
@@ -62,20 +62,20 @@ export function FreelancerProfileForm({
   );
 
   return (
-    <form action={formAction} className="grid gap-4 rounded-md border bg-background p-5 shadow-sm">
+    <form action={formAction} className="grid gap-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">
       {state.message ? (
         <div
           className={
             state.success
-              ? "rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700"
-              : "rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              ? "rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-400"
+              : "rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
           }
         >
           {state.message}
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <ProfileField label="Nome completo" name="fullName" value={profile?.fullName ?? user.name} required error={state.errors?.fullName} />
         <ProfileField label="Telefone" name="phone" value={user.phone ?? ""} error={state.errors?.phone} />
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
@@ -91,31 +91,43 @@ export function FreelancerProfileForm({
 
       <label className="grid gap-2 text-sm font-medium">
         Bio
-        <textarea className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" name="bio" defaultValue={profile?.bio ?? ""} />
+        <textarea
+          className="min-h-24 rounded-md border bg-input px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:text-sm"
+          name="bio"
+          defaultValue={profile?.bio ?? ""}
+        />
         <FieldError errors={state.errors?.bio} />
       </label>
 
       <label className="grid gap-2 text-sm font-medium">
         Experiencia
-        <textarea className="min-h-24 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" name="experience" defaultValue={profile?.experience ?? ""} />
+        <textarea
+          className="min-h-24 rounded-md border bg-input px-3 py-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:text-sm"
+          name="experience"
+          defaultValue={profile?.experience ?? ""}
+        />
         <FieldError errors={state.errors?.experience} />
       </label>
 
       <section className="grid gap-3">
         <div>
-          <h2 className="text-sm font-medium">Especialidades</h2>
+          <h2 className="text-sm font-semibold">Especialidades</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Marque as funcoes que voce pode assumir.
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {specialties.map((specialty) => (
-            <label key={specialty.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm">
+            <label
+              key={specialty.id}
+              className="flex cursor-pointer items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2.5 text-sm hover:bg-muted/50"
+            >
               <input
                 type="checkbox"
                 name="specialtyIds"
                 value={specialty.id}
                 defaultChecked={selectedSpecialtyIds.has(specialty.id)}
+                className="size-4 shrink-0 accent-primary"
               />
               <span>{specialty.name}</span>
             </label>
@@ -125,46 +137,41 @@ export function FreelancerProfileForm({
 
       <section className="grid gap-3">
         <div>
-          <h2 className="text-sm font-medium">Dias e horarios de preferencia</h2>
+          <h2 className="text-sm font-semibold">Disponibilidade</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Use madrugada, manha, tarde e noite para indicar disponibilidade recorrente.
+            Marque os dias e turnos que voce costuma estar disponivel.
           </p>
         </div>
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full min-w-[620px] text-sm">
-            <thead className="bg-muted/50 text-left">
-              <tr>
-                <th className="px-3 py-2 font-medium">Dia</th>
-                {shifts.map(([, label]) => (
-                  <th key={label} className="px-3 py-2 font-medium">{label}</th>
+        <div className="grid gap-2">
+          {days.map(([dayValue, dayLabel]) => (
+            <div key={dayValue} className="rounded-lg border bg-muted/20 p-3">
+              <p className="mb-2 text-sm font-medium">{dayLabel}</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {shifts.map(([shiftValue, shiftLabel, range]) => (
+                  <label
+                    key={shiftValue}
+                    className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/30 px-2.5 py-2 text-xs hover:bg-muted/50"
+                  >
+                    <input
+                      type="checkbox"
+                      name="availability"
+                      value={`${dayValue}:${shiftValue}`}
+                      defaultChecked={selectedAvailability.has(`${dayValue}:${shiftValue}`)}
+                      className="size-3.5 shrink-0 accent-primary"
+                    />
+                    <span className="flex flex-col leading-none">
+                      <span className="font-medium">{shiftLabel}</span>
+                      <span className="text-muted-foreground">{range}</span>
+                    </span>
+                  </label>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {days.map(([dayValue, dayLabel]) => (
-                <tr key={dayValue} className="border-t">
-                  <td className="px-3 py-2 text-muted-foreground">{dayLabel}</td>
-                  {shifts.map(([shiftValue, , range]) => (
-                    <td key={shiftValue} className="px-3 py-2">
-                      <label className="inline-flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          name="availability"
-                          value={`${dayValue}:${shiftValue}`}
-                          defaultChecked={selectedAvailability.has(`${dayValue}:${shiftValue}`)}
-                        />
-                        <span className="text-xs">{range}</span>
-                      </label>
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      <Button className="w-fit" disabled={pending} type="submit">
+      <Button className="w-full sm:w-fit" disabled={pending} type="submit">
         <Save className="size-4" />
         {pending ? "Salvando..." : "Salvar perfil"}
       </Button>
@@ -190,10 +197,10 @@ function ProfileField({
   lookupCep?: boolean;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-medium">
+    <label className="grid gap-1.5 text-sm font-medium">
       {label}
       <input
-        className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
         name={name}
         type={type}
         defaultValue={value}

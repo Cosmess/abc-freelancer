@@ -64,9 +64,9 @@ export function ProfilePhotoInput({
   const [message, setMessage] = useState("");
 
   return (
-    <section className="grid gap-3 rounded-md border bg-muted/20 p-4">
-      <div className="flex items-center gap-4">
-        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-background">
+    <section className="grid gap-3 rounded-lg border bg-muted/20 p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-input">
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={previewUrl} alt="" className="size-full object-cover" />
@@ -75,11 +75,11 @@ export function ProfilePhotoInput({
           )}
         </div>
         <div className="grid gap-2">
-          <label className="grid gap-2 text-sm font-medium">
+          <label className="grid gap-1.5 text-sm font-medium">
             {label}
             <input
               accept="image/jpeg,image/png,image/webp"
-              className="text-sm file:mr-3 file:h-8 file:rounded-md file:border-0 file:bg-primary file:px-3 file:text-sm file:font-medium file:text-primary-foreground"
+              className="text-sm text-foreground file:mr-3 file:h-9 file:rounded-md file:border-0 file:bg-primary file:px-3 file:text-sm file:font-medium file:text-primary-foreground"
               name={fileName}
               type="file"
               onChange={async (event) => {
@@ -116,7 +116,7 @@ export function ProfilePhotoInput({
           <p className="text-xs leading-5 text-muted-foreground">
             Aceita JPG, PNG ou WebP ate 8 MB. A imagem sera reduzida antes do envio.
           </p>
-          {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
+          {message ? <p className="text-xs text-primary/80">{message}</p> : null}
         </div>
       </div>
       <input type="hidden" name={hiddenName} value={currentUrl ?? ""} />

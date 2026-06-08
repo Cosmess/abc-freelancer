@@ -51,6 +51,10 @@ async function assertEmailAvailable(email: string): Promise<AuthActionState | nu
 
 function getAuthErrorMessage(error: unknown): string {
   if (error instanceof Error) {
+    if (error.message.toLowerCase().includes("rate limit")) {
+      return "O Supabase limitou o envio de emails por agora. Aguarde alguns minutos e tente novamente.";
+    }
+
     return error.message;
   }
 
@@ -155,7 +159,11 @@ export async function signupFreelancerAction(
   });
 
   if (error || !data.user) {
-    return { message: error?.message ?? "Nao foi possivel criar sua conta." };
+    return {
+      message: error
+        ? getAuthErrorMessage(error)
+        : "Nao foi possivel criar sua conta.",
+    };
   }
 
   try {
@@ -215,7 +223,11 @@ export async function signupEstablishmentAction(
   });
 
   if (error || !data.user) {
-    return { message: error?.message ?? "Nao foi possivel criar sua conta." };
+    return {
+      message: error
+        ? getAuthErrorMessage(error)
+        : "Nao foi possivel criar sua conta.",
+    };
   }
 
   try {

@@ -6,6 +6,7 @@ import { UserRole } from "@/generated/prisma/client";
 import {
   createInternalEstablishmentUser,
   createInternalFreelancerUser,
+  findAuthUserByEmail,
   findInternalUserByEmail,
   syncInternalUserFromSupabaseUser,
 } from "@/lib/auth/internal-user-store";
@@ -34,6 +35,15 @@ async function assertEmailAvailable(email: string): Promise<AuthActionState | nu
 
   if (existing) {
     return { message: "Este email ja esta cadastrado." };
+  }
+
+  const authUser = await findAuthUserByEmail(email);
+
+  if (authUser) {
+    return {
+      message:
+        "Este email ja existe no Supabase Auth. Se ainda nao confirmou, use o reenvio de verificacao; se ja confirmou, faca login.",
+    };
   }
 
   return null;
@@ -96,6 +106,13 @@ export async function resendVerificationEmailAction(
   });
 
   if (error) {
+    if (error.message.toLowerCase().includes("rate limit")) {
+      return {
+        message:
+          "O Supabase limitou o envio de emails por agora. Aguarde alguns minutos e tente reenviar novamente.",
+      };
+    }
+
     return { message: error.message };
   }
 

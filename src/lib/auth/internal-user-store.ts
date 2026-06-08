@@ -73,6 +73,21 @@ export async function findInternalUserByAuthId(supabaseAuthUserId: string) {
   return data;
 }
 
+export async function findAuthUserByEmail(email: string) {
+  const { data, error } = await getSupabaseAdminClient().auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.users.find(
+    (user) => user.email?.toLowerCase() === email.toLowerCase(),
+  ) ?? null;
+}
+
 export async function syncInternalUserFromSupabaseUser(
   authUser: SupabaseAuthUser,
 ) {

@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "ABC Freelancer",
   description:
     "Marketplace local para conectar estabelecimentos e freelancers no ABCD Paulista.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

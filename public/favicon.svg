@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a574;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8860b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Circle background -->
+  <circle cx="90" cy="90" r="90" fill="url(#grad)"/>
+
+  <!-- Inner circle for depth -->
+  <circle cx="90" cy="90" r="85" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+
+  <!-- Text: ABC -->
+  <text
+    x="90"
+    y="105"
+    font-family="Arial, sans-serif"
+    font-size="72"
+    font-weight="bold"
+    text-anchor="middle"
+    fill="white"
+    letter-spacing="4"
+  >ABC</text>
+
+  <!-- Small dot accent under ABC -->
+  <circle cx="90" cy="125" r="4" fill="white" opacity="0.7"/>
+</svg>

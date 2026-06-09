@@ -8,6 +8,7 @@ import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
 import {
   CATALOG_PAGE_SIZE,
   getActiveSpecialties,
+  getEstablishmentProfile,
   getFreelancerCatalog,
 } from "@/lib/profiles/profile-store";
 import { requireEstablishment } from "@/server/guards/auth";
@@ -34,7 +35,8 @@ const SHIFT_OPTIONS = [
 ];
 
 export default async function FreelancerCatalogPage({ searchParams }: Props) {
-  await requireEstablishment();
+  const user = await requireEstablishment();
+  const profile = await getEstablishmentProfile(user.id);
   const params = await searchParams;
 
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
@@ -155,7 +157,7 @@ export default async function FreelancerCatalogPage({ searchParams }: Props) {
         {catalog.items.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {catalog.items.map((freelancer) => (
-              <FreelancerCard key={freelancer.id} freelancer={freelancer} />
+              <FreelancerCard key={freelancer.id} freelancer={freelancer} senderName={profile?.tradeName} />
             ))}
           </div>
         ) : (
@@ -240,9 +242,10 @@ type CardProps = {
     specialties: Array<{ id: string; name: string }>;
     shifts: string[];
   };
+  senderName?: string | null;
 };
 
-function FreelancerCard({ freelancer }: CardProps) {
+function FreelancerCard({ freelancer, senderName }: CardProps) {
   const MAX_SPECIALTIES = 3;
   const MAX_SHIFTS = 4;
   const visibleSpecialties = freelancer.specialties.slice(0, MAX_SPECIALTIES);
@@ -250,6 +253,7 @@ function FreelancerCard({ freelancer }: CardProps) {
   const visibleShifts = freelancer.shifts.slice(0, MAX_SHIFTS);
   const extraShifts = freelancer.shifts.length - MAX_SHIFTS;
   const instagramUrl = getInstagramUrl(freelancer.instagram);
+  const whatsappMessage = `ola sou do ${senderName || "ABC Freelancer"} encontrei o seu contato no site abcfreelancer`;
 
   return (
     <article className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-card/80">
@@ -337,7 +341,7 @@ function FreelancerCard({ freelancer }: CardProps) {
         )}
         {freelancer.whatsapp && (
           <a
-            href={getWhatsAppUrl(freelancer.whatsapp, `ola sou do ${freelancer.fullName} encontrei o seu contato no site abcfreelancer`) || ""}
+            href={getWhatsAppUrl(freelancer.whatsapp, whatsappMessage) || ""}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"

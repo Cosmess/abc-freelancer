@@ -8,6 +8,7 @@ import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
 import {
   CATALOG_PAGE_SIZE,
   getEstablishmentCatalog,
+  getFreelancerProfile,
 } from "@/lib/profiles/profile-store";
 import { requireFreelancer } from "@/server/guards/auth";
 
@@ -26,7 +27,8 @@ type Props = {
 };
 
 export default async function EstablishmentCatalogPage({ searchParams }: Props) {
-  await requireFreelancer();
+  const user = await requireFreelancer();
+  const profile = await getFreelancerProfile(user.id);
   const params = await searchParams;
 
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
@@ -130,7 +132,7 @@ export default async function EstablishmentCatalogPage({ searchParams }: Props) 
         {catalog.items.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {catalog.items.map((establishment) => (
-              <EstablishmentCard key={establishment.id} establishment={establishment} />
+              <EstablishmentCard key={establishment.id} establishment={establishment} senderName={profile?.fullName} />
             ))}
           </div>
         ) : (
@@ -204,6 +206,7 @@ export default async function EstablishmentCatalogPage({ searchParams }: Props) 
 
 type CardProps = {
   establishment: EstablishmentCatalogItem;
+  senderName?: string | null;
 };
 
 type EstablishmentCatalogItem = {
@@ -232,9 +235,10 @@ function formatAddress(item: EstablishmentCatalogItem): string | null {
   return parts.length > 0 ? parts.join(" — ") : null;
 }
 
-function EstablishmentCard({ establishment }: CardProps) {
+function EstablishmentCard({ establishment, senderName }: CardProps) {
   const instagramUrl = getInstagramUrl(establishment.instagram);
   const address = formatAddress(establishment);
+  const whatsappMessage = `ola sou do ${senderName || "ABC Freelancer"} encontrei o seu contato no site abcfreelancer`;
 
   return (
     <article className="flex flex-col gap-3 rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-card/80">
@@ -300,7 +304,7 @@ function EstablishmentCard({ establishment }: CardProps) {
         )}
         {establishment.whatsapp && (
           <a
-            href={getWhatsAppUrl(establishment.whatsapp, `ola sou do ${establishment.tradeName} encontrei o seu contato no site abcfreelancer`) || ""}
+            href={getWhatsAppUrl(establishment.whatsapp, whatsappMessage) || ""}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"

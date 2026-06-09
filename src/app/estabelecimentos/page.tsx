@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Building2, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
-import { getInstagramUrl } from "@/lib/jobs/formatters";
+import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
 import {
   CATALOG_PAGE_SIZE,
   getEstablishmentCatalog,
@@ -218,6 +218,7 @@ type EstablishmentCatalogItem = {
   description: string | null;
   profilePhotoUrl: string | null;
   instagram: string | null;
+  whatsapp: string | null;
 };
 
 function formatAddress(item: EstablishmentCatalogItem): string | null {
@@ -284,18 +285,31 @@ function EstablishmentCard({ establishment }: CardProps) {
         </p>
       )}
 
-      {/* Instagram */}
-      {instagramUrl && (
-        <a
-          href={instagramUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-auto flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
-        >
-          <InstagramIcon className="size-3.5" />
-          {establishment.instagram?.replace(/^@/, "@") ?? ""}
-        </a>
-      )}
+      {/* Social links */}
+      <div className="mt-auto flex flex-wrap gap-3">
+        {instagramUrl && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+          >
+            <InstagramIcon className="size-3.5" />
+            {establishment.instagram?.replace(/^@/, "@") ?? ""}
+          </a>
+        )}
+        {establishment.whatsapp && (
+          <a
+            href={getWhatsAppUrl(establishment.whatsapp, `ola sou do ${establishment.tradeName} encontrei o seu contato no site abcfreelancer`) || ""}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+          >
+            <MessageCircle className="size-3.5" />
+            WhatsApp
+          </a>
+        )}
+      </div>
     </article>
   );
 }

@@ -407,6 +407,7 @@ export type FreelancerCatalogItem = {
   bio: string | null;
   profilePhotoUrl: string | null;
   instagram: string | null;
+  whatsapp: string | null;
   specialties: Array<{ id: string; name: string }>;
   shifts: string[];
 };
@@ -467,7 +468,7 @@ export async function getFreelancerCatalog(input: {
   // Main query with count
   let query = supabase
     .from("FreelancerProfile")
-    .select("id,fullName,city,neighborhood,bio,profilePhotoUrl,instagram", { count: "exact" })
+    .select("id,fullName,city,neighborhood,bio,profilePhotoUrl,instagram,whatsapp", { count: "exact" })
     .neq("status", "BLOCKED")
     .order("fullName", { ascending: true })
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
@@ -489,6 +490,7 @@ export async function getFreelancerCatalog(input: {
       bio: string | null;
       profilePhotoUrl: string | null;
       instagram: string | null;
+      whatsapp: string | null;
     }>
   >();
 
@@ -580,6 +582,7 @@ export type EstablishmentCatalogItem = {
   description: string | null;
   profilePhotoUrl: string | null;
   instagram: string | null;
+  whatsapp: string | null;
 };
 
 export type EstablishmentCatalogResult = {
@@ -601,7 +604,7 @@ export async function getEstablishmentCatalog(input: {
 
   let query = supabase
     .from("EstablishmentProfile")
-    .select("id,tradeName,type,city,neighborhood,street,number,cep,description,profilePhotoUrl,instagram", { count: "exact" })
+    .select("id,tradeName,type,city,neighborhood,street,number,cep,description,profilePhotoUrl,instagram,whatsapp", { count: "exact" })
     .neq("status", "BLOCKED")
     .order("tradeName", { ascending: true })
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
@@ -631,6 +634,7 @@ export async function getEstablishmentCatalog(input: {
       description: string | null;
       profilePhotoUrl: string | null;
       instagram: string | null;
+      whatsapp: string | null;
     }>
   >();
 

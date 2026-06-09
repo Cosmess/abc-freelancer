@@ -59,6 +59,8 @@ export function getInstagramUrl(handle: string | null | undefined): string | nul
   return `https://www.instagram.com/${username}`;
 }
 
+export function getWhatsAppUrl(phone: string | null, message: string): string | null;
+export function getWhatsAppUrl(phone: string | undefined, message: string): string | null;
 export function getWhatsAppUrl(phone: string | null | undefined, message: string) {
   const digits = phone?.replace(/\D/g, "") ?? "";
 

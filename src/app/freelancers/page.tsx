@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Search, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
-import { getInstagramUrl } from "@/lib/jobs/formatters";
+import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
 import {
   CATALOG_PAGE_SIZE,
   getActiveSpecialties,
@@ -236,6 +236,7 @@ type CardProps = {
     bio: string | null;
     profilePhotoUrl: string | null;
     instagram: string | null;
+    whatsapp: string | null;
     specialties: Array<{ id: string; name: string }>;
     shifts: string[];
   };
@@ -321,18 +322,31 @@ function FreelancerCard({ freelancer }: CardProps) {
         </div>
       )}
 
-      {/* Instagram */}
-      {instagramUrl && (
-        <a
-          href={instagramUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-auto flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
-        >
-          <InstagramIcon className="size-3.5" />
-          {freelancer.instagram?.replace(/^@/, "@") ?? ""}
-        </a>
-      )}
+      {/* Social links */}
+      <div className="mt-auto flex flex-wrap gap-3">
+        {instagramUrl && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+          >
+            <InstagramIcon className="size-3.5" />
+            {freelancer.instagram?.replace(/^@/, "@") ?? ""}
+          </a>
+        )}
+        {freelancer.whatsapp && (
+          <a
+            href={getWhatsAppUrl(freelancer.whatsapp, `ola sou do ${freelancer.fullName} encontrei o seu contato no site abcfreelancer`) || ""}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+          >
+            <MessageCircle className="size-3.5" />
+            WhatsApp
+          </a>
+        )}
+      </div>
     </article>
   );
 }

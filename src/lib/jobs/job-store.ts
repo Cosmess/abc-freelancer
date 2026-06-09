@@ -2,6 +2,8 @@ import { randomUUID } from "crypto";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
+export const JOBS_PAGE_SIZE = 12;
+
 export type JobPost = {
   id: string;
   establishmentId: string;
@@ -70,6 +72,30 @@ export type EstablishmentApplicationListing = JobApplication & {
     experience: string | null;
     specialties: string[];
   };
+};
+
+export type JobListingsPageResult = {
+  items: JobListing[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type EstablishmentJobPostsPageResult = {
+  items: EstablishmentJobPost[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type FreelancerApplicationsPageResult = {
+  items: FreelancerApplicationListing[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 };
 
 type OpenJobFilters = {
@@ -618,4 +644,180 @@ export async function closeJobPostForEstablishment(input: {
   if (error) {
     throw error;
   }
+}
+
+export async function getOpenJobListingsPaged(input: {
+  freelancerId?: string;
+  filters?: OpenJobFilters;
+  page?: number;
+}): Promise<JobListingsPageResult> {
+  const page = Math.max(1, input.page ?? 1);
+  let query = getSupabaseAdminClient()
+    .from("JobPost")
+    .select("*", { count: "exact" })
+    .eq("status", "OPEN")
+    .order("workDate", { ascending: true })
+    .range((page - 1) * JOBS_PAGE_SIZE, page * JOBS_PAGE_SIZE - 1);
+
+  if (input.filters?.city) {
+    query = query.ilike("city", `%${input.filters.city}%`);
+  }
+
+  if (input.filters?.neighborhood) {
+    query = query.ilike("neighborhood", `%${input.filters.neighborhood}%`);
+  }
+
+  if (input.filters?.specialtyId) {
+    query = query.eq("specialtyId", input.filters.specialtyId);
+  }
+
+  const { data, error, count } = await query.returns<JobPost[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  const jobs = (data ?? []).filter(isFutureOrTodayJob);
+  const total = count ?? 0;
+
+  const [establishments, specialtyNames] = await Promise.all([
+    getEstablishments(jobs.map((job) => job.establishmentId)),
+    getSpecialtyNames(jobs.map((job) => job.specialtyId)),
+  ]);
+
+  let applications = new Map<string, string>();
+
+  if (input.freelancerId && jobs.length) {
+    const { data: appData, error: appError } = await getSupabaseAdminClient()
+      .from("JobApplication")
+      .select("jobPostId,status")
+      .eq("freelancerId", input.freelancerId)
+      .in("jobPostId", jobs.map((job) => job.id))
+      .returns<Array<{ jobPostId: string; status: string }>>();
+
+    if (appError) {
+      throw appError;
+    }
+
+    applications = new Map((appData ?? []).map((item) => [item.jobPostId, item.status]));
+  }
+
+  return {
+    items: jobs.map((job) => ({
+      ...job,
+      establishmentName: establishments.get(job.establishmentId)?.tradeName ?? "Estabelecimento",
+      establishmentPhotoUrl: establishments.get(job.establishmentId)?.profilePhotoUrl ?? null,
+      specialtyName: specialtyNames.get(job.specialtyId) ?? "Especialidade",
+      applicationStatus: applications.get(job.id) ?? null,
+    })),
+    total,
+    page,
+    pageSize: JOBS_PAGE_SIZE,
+    totalPages: Math.ceil(total / JOBS_PAGE_SIZE),
+  };
+}
+
+export async function getJobPostsByEstablishmentPaged(
+  establishmentId: string,
+  page?: number,
+): Promise<EstablishmentJobPostsPageResult> {
+  const pageNum = Math.max(1, page ?? 1);
+  const { data, error, count } = await getSupabaseAdminClient()
+    .from("JobPost")
+    .select("*", { count: "exact" })
+    .eq("establishmentId", establishmentId)
+    .order("createdAt", { ascending: false })
+    .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1)
+    .returns<JobPost[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  const jobs = data ?? [];
+  const total = count ?? 0;
+  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+
+  return {
+    items: jobs.map((job) => ({
+      ...job,
+      acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+    })),
+    total,
+    page: pageNum,
+    pageSize: JOBS_PAGE_SIZE,
+    totalPages: Math.ceil(total / JOBS_PAGE_SIZE),
+  };
+}
+
+export async function getFreelancerApplicationsPaged(
+  freelancerId: string,
+  page?: number,
+): Promise<FreelancerApplicationsPageResult> {
+  const pageNum = Math.max(1, page ?? 1);
+  const { data: applications, error, count } = await getSupabaseAdminClient()
+    .from("JobApplication")
+    .select("*", { count: "exact" })
+    .eq("freelancerId", freelancerId)
+    .order("createdAt", { ascending: false })
+    .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1)
+    .returns<JobApplication[]>();
+
+  if (error) {
+    throw error;
+  }
+
+  const apps = applications ?? [];
+  const total = count ?? 0;
+  const jobIds = apps.map((item) => item.jobPostId);
+
+  if (!jobIds.length) {
+    return { items: [], total, page: pageNum, pageSize: JOBS_PAGE_SIZE, totalPages: Math.ceil(total / JOBS_PAGE_SIZE) };
+  }
+
+  const { data: jobs, error: jobsError } = await getSupabaseAdminClient()
+    .from("JobPost")
+    .select("*")
+    .in("id", jobIds)
+    .returns<JobPost[]>();
+
+  if (jobsError) {
+    throw jobsError;
+  }
+
+  const jobById = new Map((jobs ?? []).map((job) => [job.id, job]));
+  const [establishments, specialtyNames] = await Promise.all([
+    getEstablishments((jobs ?? []).map((job) => job.establishmentId)),
+    getSpecialtyNames((jobs ?? []).map((job) => job.specialtyId)),
+  ]);
+
+  return {
+    items: apps
+      .map((application) => {
+        const job = jobById.get(application.jobPostId);
+
+        if (!job) {
+          return null;
+        }
+
+        const establishment = establishments.get(job.establishmentId);
+
+        return {
+          ...application,
+          job,
+          establishmentName: establishment?.tradeName ?? "Estabelecimento",
+          establishmentPhotoUrl: establishment?.profilePhotoUrl ?? null,
+          establishmentWhatsapp:
+            application.status === "ACCEPTED" ? establishment?.whatsapp ?? null : null,
+          establishmentInstagram:
+            application.status === "ACCEPTED" ? establishment?.instagram ?? null : null,
+          specialtyName: specialtyNames.get(job.specialtyId) ?? "Especialidade",
+        };
+      })
+      .filter((item): item is FreelancerApplicationListing => Boolean(item)),
+    total,
+    page: pageNum,
+    pageSize: JOBS_PAGE_SIZE,
+    totalPages: Math.ceil(total / JOBS_PAGE_SIZE),
+  };
 }

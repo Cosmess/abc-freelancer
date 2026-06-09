@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BriefcaseBusiness, MapPin, Search, Send } from "lucide-react";
+import { BriefcaseBusiness, ChevronLeft, ChevronRight, MapPin, Search, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/generated/prisma/client";
@@ -9,7 +9,7 @@ import {
   getApplicationStatusLabel,
   getJobMapsUrl,
 } from "@/lib/jobs/formatters";
-import { getOpenJobListings } from "@/lib/jobs/job-store";
+import { JOBS_PAGE_SIZE, getOpenJobListingsPaged } from "@/lib/jobs/job-store";
 import { getActiveSpecialties, getFreelancerProfile } from "@/lib/profiles/profile-store";
 import { applyToJobAction } from "@/server/actions/jobs";
 import { requireUser } from "@/server/guards/auth";
@@ -19,25 +19,40 @@ type Props = {
     cidade?: string;
     bairro?: string;
     especialidade?: string;
+    pagina?: string;
   }>;
 };
 
 export default async function JobsPage({ searchParams }: Props) {
   const user = await requireUser();
   const params = await searchParams;
+  const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const freelancerProfile =
     user.role === UserRole.FREELANCER ? await getFreelancerProfile(user.id) : null;
-  const [jobs, specialties] = await Promise.all([
-    getOpenJobListings({
+  const [catalog, specialties] = await Promise.all([
+    getOpenJobListingsPaged({
       freelancerId: freelancerProfile?.id,
       filters: {
         city: params.cidade,
         neighborhood: params.bairro,
         specialtyId: params.especialidade,
       },
+      page,
     }),
     getActiveSpecialties(),
   ]);
+
+  const hasFilters = Boolean(params.cidade || params.bairro || params.especialidade);
+
+  function buildPageUrl(targetPage: number) {
+    const p = new URLSearchParams();
+    if (params.cidade) p.set("cidade", params.cidade);
+    if (params.bairro) p.set("bairro", params.bairro);
+    if (params.especialidade) p.set("especialidade", params.especialidade);
+    if (targetPage > 1) p.set("pagina", String(targetPage));
+    const qs = p.toString();
+    return `/vagas${qs ? `?${qs}` : ""}`;
+  }
 
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
@@ -106,10 +121,25 @@ export default async function JobsPage({ searchParams }: Props) {
           </Button>
         </form>
 
+        {/* Results summary */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {catalog.total === 0
+              ? "Nenhuma vaga aberta"
+              : `${catalog.total} vaga${catalog.total !== 1 ? "s" : ""} aberta${catalog.total !== 1 ? "s" : ""}`}
+            {hasFilters ? " com os filtros aplicados" : ""}
+          </span>
+          {catalog.totalPages > 1 && (
+            <span>
+              Pagina {catalog.page} de {catalog.totalPages}
+            </span>
+          )}
+        </div>
+
         <div className="rounded-lg border bg-card shadow-sm">
-          {jobs.length ? (
+          {catalog.items.length ? (
             <div className="divide-y divide-border">
-              {jobs.map((job) => (
+              {catalog.items.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-start">
                   <div className="flex gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
@@ -180,11 +210,62 @@ export default async function JobsPage({ searchParams }: Props) {
               <BriefcaseBusiness className="mb-4 size-6 text-muted-foreground" />
               <h2 className="font-semibold">Nenhuma vaga aberta</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Ajuste os filtros ou aguarde novas vagas dos estabelecimentos.
+                {hasFilters
+                  ? "Tente ajustar os filtros para ver mais resultados."
+                  : "Nenhuma vaga aberta no momento. Verifique mais tarde."}
               </p>
+              {hasFilters && (
+                <Button asChild variant="outline" className="mt-4">
+                  <Link href="/vagas">Limpar filtros</Link>
+                </Button>
+              )}
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {catalog.totalPages > 1 && (
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Mostrando{" "}
+              {Math.min((catalog.page - 1) * JOBS_PAGE_SIZE + 1, catalog.total)}–
+              {Math.min(catalog.page * JOBS_PAGE_SIZE, catalog.total)} de {catalog.total}
+            </p>
+            <div className="flex items-center gap-2">
+              {catalog.page > 1 ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageUrl(catalog.page - 1)}>
+                    <ChevronLeft className="size-4" />
+                    Anterior
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  <ChevronLeft className="size-4" />
+                  Anterior
+                </Button>
+              )}
+
+              <span className="px-2 text-sm font-medium">
+                {catalog.page} / {catalog.totalPages}
+              </span>
+
+              {catalog.page < catalog.totalPages ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageUrl(catalog.page + 1)}>
+                    Proxima
+                    <ChevronRight className="size-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  Proxima
+                  <ChevronRight className="size-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );

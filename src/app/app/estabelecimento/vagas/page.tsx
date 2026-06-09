@@ -1,18 +1,33 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, LockKeyhole, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ClipboardList, LockKeyhole, Plus, Trash2, Users } from "lucide-react";
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { getJobStatusLabel } from "@/lib/jobs/formatters";
-import { getJobPostsByEstablishment } from "@/lib/jobs/job-store";
+import { JOBS_PAGE_SIZE, getJobPostsByEstablishmentPaged } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
 import { closeJobPostAction, deleteJobPostAction } from "@/server/actions/jobs";
 import { requireEstablishment } from "@/server/guards/auth";
 
-export default async function EstablishmentJobsPage() {
+type Props = {
+  searchParams: Promise<{
+    pagina?: string;
+  }>;
+};
+
+export default async function EstablishmentJobsPage({ searchParams }: Props) {
   const user = await requireEstablishment();
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const profile = await getEstablishmentProfile(user.id);
-  const jobs = profile ? await getJobPostsByEstablishment(profile.id) : [];
+  const catalog = profile ? await getJobPostsByEstablishmentPaged(profile.id, page) : { items: [], total: 0, page, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
+
+  function buildPageUrl(targetPage: number) {
+    const p = new URLSearchParams();
+    if (targetPage > 1) p.set("pagina", String(targetPage));
+    const qs = p.toString();
+    return `/app/estabelecimento/vagas${qs ? `?${qs}` : ""}`;
+  }
 
   return (
     <main className="min-h-screen bg-muted/30 text-foreground">
@@ -44,9 +59,9 @@ export default async function EstablishmentJobsPage() {
         </div>
 
         <div className="rounded-lg border bg-card shadow-sm">
-          {jobs.length ? (
+          {catalog.items.length ? (
             <div className="divide-y divide-border">
-              {jobs.map((job) => (
+              {catalog.items.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="flex gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
@@ -120,6 +135,50 @@ export default async function EstablishmentJobsPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {catalog.totalPages > 1 && (
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Mostrando{" "}
+              {Math.min((catalog.page - 1) * JOBS_PAGE_SIZE + 1, catalog.total)}–
+              {Math.min(catalog.page * JOBS_PAGE_SIZE, catalog.total)} de {catalog.total}
+            </p>
+            <div className="flex items-center gap-2">
+              {catalog.page > 1 ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageUrl(catalog.page - 1)}>
+                    <ChevronLeft className="size-4" />
+                    Anterior
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  <ChevronLeft className="size-4" />
+                  Anterior
+                </Button>
+              )}
+
+              <span className="px-2 text-sm font-medium">
+                {catalog.page} / {catalog.totalPages}
+              </span>
+
+              {catalog.page < catalog.totalPages ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={buildPageUrl(catalog.page + 1)}>
+                    Proxima
+                    <ChevronRight className="size-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" disabled>
+                  Proxima
+                  <ChevronRight className="size-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );

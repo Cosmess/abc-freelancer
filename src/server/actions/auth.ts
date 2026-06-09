@@ -136,8 +136,9 @@ export async function loginAction(
   if (error || !data.user) {
     if (error?.message.toLowerCase().includes("email not confirmed")) {
       return {
-        message:
-          "Cadastro pendente de validacao. Confirme o email ou aguarde aprovacao manual.",
+        message: "Seu email ainda nao foi confirmado. Verifique sua caixa de entrada (e spam) e clique no link de verificacao.",
+        emailNotVerified: true,
+        email: parsed.data.email,
       };
     }
 
@@ -147,8 +148,9 @@ export async function loginAction(
   if (!data.user.email_confirmed_at) {
     await supabase.auth.signOut();
     return {
-      message:
-        "Confirme seu email pelo link enviado antes de acessar sua conta.",
+      message: "Seu email ainda nao foi confirmado. Verifique sua caixa de entrada (e spam) e clique no link de verificacao.",
+      emailNotVerified: true,
+      email: parsed.data.email,
     };
   }
 
@@ -232,9 +234,9 @@ export async function signupFreelancerAction(
       fullName: parsed.data.fullName,
       phone: parsed.data.phone,
       whatsapp: parsed.data.whatsapp,
-      cpf: cleanDocument(parsed.data.cpf),
       city: parsed.data.city,
       neighborhood: parsed.data.neighborhood,
+      termsAcceptedAt: new Date().toISOString(),
     });
   } catch (error) {
     await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
@@ -287,9 +289,9 @@ export async function signupEstablishmentAction(
       phone: parsed.data.phone,
       tradeName: parsed.data.tradeName,
       whatsapp: parsed.data.whatsapp,
-      cnpj: cleanDocument(parsed.data.cnpj) ?? parsed.data.cnpj,
       city: parsed.data.city,
       neighborhood: parsed.data.neighborhood,
+      termsAcceptedAt: new Date().toISOString(),
     });
   } catch (error) {
     await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);

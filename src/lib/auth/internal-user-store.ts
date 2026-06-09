@@ -12,6 +12,7 @@ export type InternalUser = {
   phone: string | null;
   role: UserRole;
   emailVerifiedAt: string | null;
+  termsAcceptedAt: string | null;
   trialStartsAt: string;
   trialEndsAt: string;
 };
@@ -183,9 +184,9 @@ export async function createInternalFreelancerUser(input: {
   fullName: string;
   phone?: string;
   whatsapp?: string;
-  cpf?: string;
   city: string;
   neighborhood?: string;
+  termsAcceptedAt: string;
 }) {
   const supabase = getSupabaseAdminClient();
   const now = new Date();
@@ -199,6 +200,7 @@ export async function createInternalFreelancerUser(input: {
       name: input.fullName,
       phone: input.phone || null,
       role: UserRole.FREELANCER,
+      termsAcceptedAt: input.termsAcceptedAt,
       trialStartsAt: now.toISOString(),
       trialEndsAt: getTrialEndsAt(now).toISOString(),
       createdAt: now.toISOString(),
@@ -217,7 +219,6 @@ export async function createInternalFreelancerUser(input: {
     fullName: input.fullName,
     email: input.email,
     whatsapp: input.whatsapp || null,
-    cpf: input.cpf || null,
     city: input.city,
     neighborhood: input.neighborhood || null,
     createdAt: now.toISOString(),
@@ -238,9 +239,9 @@ export async function createInternalEstablishmentUser(input: {
   phone?: string;
   tradeName: string;
   whatsapp?: string;
-  cnpj: string;
   city: string;
   neighborhood?: string;
+  termsAcceptedAt: string;
 }) {
   const supabase = getSupabaseAdminClient();
   const now = new Date();
@@ -254,6 +255,7 @@ export async function createInternalEstablishmentUser(input: {
       name: input.responsibleName,
       phone: input.phone || null,
       role: UserRole.ESTABLISHMENT,
+      termsAcceptedAt: input.termsAcceptedAt,
       trialStartsAt: now.toISOString(),
       trialEndsAt: getTrialEndsAt(now).toISOString(),
       createdAt: now.toISOString(),
@@ -274,7 +276,6 @@ export async function createInternalEstablishmentUser(input: {
       tradeName: input.tradeName,
       email: input.email,
       whatsapp: input.whatsapp || null,
-      cnpj: input.cnpj,
       city: input.city,
       neighborhood: input.neighborhood || null,
       createdAt: now.toISOString(),

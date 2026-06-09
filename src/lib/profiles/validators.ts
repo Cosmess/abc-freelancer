@@ -5,7 +5,6 @@ const optionalText = z.string().trim().optional();
 export const freelancerProfileSchema = z.object({
   fullName: z.string().trim().min(2, "Informe seu nome completo."),
   phone: optionalText,
-  cpf: optionalText,
   whatsapp: optionalText,
   instagram: optionalText,
   email: z.email("Informe um email valido.").trim().optional().or(z.literal("")),
@@ -23,7 +22,6 @@ export const establishmentProfileSchema = z.object({
   phone: optionalText,
   tradeName: z.string().trim().min(2, "Informe o nome do estabelecimento."),
   legalName: optionalText,
-  cnpj: z.string().trim().min(14, "Informe o CNPJ."),
   whatsapp: optionalText,
   instagram: optionalText,
   email: z.email("Informe um email valido.").trim().optional().or(z.literal("")),

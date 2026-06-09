@@ -93,7 +93,6 @@ export async function updateFreelancerProfileAction(
     const profile = await upsertFreelancerProfile({
       userId: user.id,
       fullName: parsed.data.fullName,
-      cpf: cleanDocument(parsed.data.cpf),
       whatsapp: parsed.data.whatsapp,
       ...(parsed.data.instagram ? { instagram: parsed.data.instagram } : {}),
       email: parsed.data.email,
@@ -151,7 +150,6 @@ export async function updateEstablishmentProfileAction(
       userId: user.id,
       tradeName: parsed.data.tradeName,
       legalName: parsed.data.legalName,
-      cnpj: cleanDocument(parsed.data.cnpj) ?? parsed.data.cnpj,
       whatsapp: parsed.data.whatsapp,
       ...(parsed.data.instagram ? { instagram: parsed.data.instagram } : {}),
       email: parsed.data.email,

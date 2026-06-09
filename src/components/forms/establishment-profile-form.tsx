@@ -44,7 +44,6 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
         <ProfileField label="Telefone" name="phone" value={user.phone ?? ""} error={state.errors?.phone} />
         <ProfileField label="Nome fantasia" name="tradeName" value={profile?.tradeName ?? ""} required error={state.errors?.tradeName} />
         <ProfileField label="Razao social" name="legalName" value={profile?.legalName ?? ""} error={state.errors?.legalName} />
-        <ProfileField label="CNPJ" name="cnpj" value={profile?.cnpj ?? ""} required error={state.errors?.cnpj} />
         <ProfileField label="Tipo de estabelecimento" name="type" value={profile?.type ?? ""} error={state.errors?.type} />
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
         <ProfileField label="WhatsApp" name="whatsapp" value={profile?.whatsapp ?? ""} error={state.errors?.whatsapp} />

@@ -6,7 +6,6 @@ export type FreelancerProfile = {
   id: string;
   userId: string;
   fullName: string;
-  cpf: string | null;
   whatsapp: string | null;
   instagram: string | null;
   email: string | null;
@@ -41,7 +40,7 @@ export type EstablishmentProfile = {
   userId: string;
   tradeName: string;
   legalName: string | null;
-  cnpj: string;
+  cnpj: string | null;
   whatsapp: string | null;
   instagram: string | null;
   email: string | null;
@@ -152,7 +151,6 @@ export async function updateUserBasics(input: {
 export async function upsertFreelancerProfile(input: {
   userId: string;
   fullName: string;
-  cpf?: string | null;
   whatsapp?: string | null;
   instagram?: string | null;
   email?: string | null;
@@ -168,7 +166,6 @@ export async function upsertFreelancerProfile(input: {
   const now = new Date().toISOString();
   const payload = {
     fullName: input.fullName,
-    cpf: input.cpf || null,
     whatsapp: input.whatsapp || null,
     ...(input.instagram !== undefined ? { instagram: input.instagram || null } : {}),
     email: input.email || null,
@@ -316,7 +313,6 @@ export async function upsertEstablishmentProfile(input: {
   userId: string;
   tradeName: string;
   legalName?: string | null;
-  cnpj: string;
   whatsapp?: string | null;
   instagram?: string | null;
   email?: string | null;
@@ -336,7 +332,6 @@ export async function upsertEstablishmentProfile(input: {
   const payload = {
     tradeName: input.tradeName,
     legalName: input.legalName || null,
-    cnpj: input.cnpj,
     whatsapp: input.whatsapp || null,
     ...(input.instagram !== undefined ? { instagram: input.instagram || null } : {}),
     email: input.email || null,

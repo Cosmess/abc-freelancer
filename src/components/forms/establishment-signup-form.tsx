@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { Building2 } from "lucide-react";
 
@@ -19,15 +20,15 @@ export function EstablishmentSignupForm() {
   return (
     <form action={formAction} className="grid gap-4">
       {state.message ? (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
           {state.message}
         </div>
       ) : null}
 
-      <label className="grid gap-2 text-sm font-medium">
+      <label className="grid gap-1.5 text-sm font-medium">
         Nome do responsavel
         <input
-          className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
           name="responsibleName"
           autoComplete="name"
           required
@@ -35,10 +36,10 @@ export function EstablishmentSignupForm() {
         <FieldError errors={state.errors?.responsibleName} />
       </label>
 
-      <label className="grid gap-2 text-sm font-medium">
+      <label className="grid gap-1.5 text-sm font-medium">
         Nome do estabelecimento
         <input
-          className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
           name="tradeName"
           required
         />
@@ -46,10 +47,10 @@ export function EstablishmentSignupForm() {
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           Email
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="email"
             type="email"
             autoComplete="email"
@@ -57,10 +58,10 @@ export function EstablishmentSignupForm() {
           />
           <FieldError errors={state.errors?.email} />
         </label>
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           Senha
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="password"
             type="password"
             autoComplete="new-password"
@@ -71,32 +72,19 @@ export function EstablishmentSignupForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           Telefone
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="phone"
             inputMode="tel"
           />
           <FieldError errors={state.errors?.phone} />
         </label>
-        <label className="grid gap-2 text-sm font-medium">
-          CNPJ
-          <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-            name="cnpj"
-            inputMode="numeric"
-            required
-          />
-          <FieldError errors={state.errors?.cnpj} />
-        </label>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           WhatsApp
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="whatsapp"
             inputMode="tel"
           />
@@ -105,28 +93,52 @@ export function EstablishmentSignupForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           Cidade
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="city"
             required
           />
           <FieldError errors={state.errors?.city} />
         </label>
-        <label className="grid gap-2 text-sm font-medium">
+        <label className="grid gap-1.5 text-sm font-medium">
           Bairro
           <input
-            className="h-10 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="neighborhood"
           />
           <FieldError errors={state.errors?.neighborhood} />
         </label>
       </div>
 
-      <Button className="h-10" disabled={pending} type="submit">
+      <div className="grid gap-2">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            name="termsAccepted"
+            value="true"
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+            required
+          />
+          <span className="text-sm text-muted-foreground leading-5">
+            Li e aceito os{" "}
+            <Link
+              href="/termos"
+              target="_blank"
+              className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+            >
+              Termos de Uso e Politica de Privacidade
+            </Link>
+            , incluindo o tratamento dos dados do estabelecimento conforme a LGPD.
+          </span>
+        </label>
+        <FieldError errors={state.errors?.termsAccepted} />
+      </div>
+
+      <Button className="h-11 w-full sm:h-10" disabled={pending} type="submit">
         <Building2 className="size-4" />
-        {pending ? "Criando..." : "Criar conta"}
+        {pending ? "Criando conta..." : "Criar conta"}
       </Button>
     </form>
   );

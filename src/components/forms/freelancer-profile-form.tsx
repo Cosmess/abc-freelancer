@@ -81,7 +81,6 @@ export function FreelancerProfileForm({
         <ProfileField label="Email de contato" name="email" type="email" value={profile?.email ?? user.email} error={state.errors?.email} />
         <ProfileField label="WhatsApp" name="whatsapp" value={profile?.whatsapp ?? ""} error={state.errors?.whatsapp} />
         <ProfileField label="Instagram (arroba)" name="instagram" value={profile?.instagram ?? ""} placeholder="@seuarroba" error={state.errors?.instagram} />
-        <ProfileField label="CPF" name="cpf" value={profile?.cpf ?? ""} error={state.errors?.cpf} />
         <ProfileField label="Cidade" name="city" value={profile?.city ?? ""} error={state.errors?.city} />
         <ProfileField label="Bairro" name="neighborhood" value={profile?.neighborhood ?? ""} error={state.errors?.neighborhood} />
         <ProfileField label="Rua" name="street" value={profile?.street ?? ""} error={state.errors?.street} />

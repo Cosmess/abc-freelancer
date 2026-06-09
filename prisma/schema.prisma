@@ -74,6 +74,7 @@ model User {
   phone              String?
   role               UserRole
   emailVerifiedAt    DateTime?
+  termsAcceptedAt    DateTime?
   trialStartsAt      DateTime
   trialEndsAt        DateTime
   createdAt          DateTime  @default(now())
@@ -95,7 +96,7 @@ model EstablishmentProfile {
   userId      String        @unique
   tradeName   String
   legalName   String?
-  cnpj        String        @unique
+  cnpj        String?
   whatsapp    String?
   instagram   String?
   email       String?
@@ -130,7 +131,6 @@ model FreelancerProfile {
   id              String        @id @default(cuid())
   userId          String        @unique
   fullName        String
-  cpf             String?       @unique
   whatsapp        String?
   instagram       String?
   email           String?

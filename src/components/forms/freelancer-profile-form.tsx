@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
@@ -60,6 +60,13 @@ export function FreelancerProfileForm({
   const selectedAvailability = new Set(
     availability.map((item) => `${item.dayOfWeek}:${getShiftFromTime(item.startTime)}`),
   );
+
+  // Scroll to top when profile saves successfully
+  useEffect(() => {
+    if (state.success) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [state.success]);
 
   return (
     <form action={formAction} className="grid gap-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">

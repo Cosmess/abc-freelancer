@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { Save } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
@@ -24,6 +24,13 @@ export function EstablishmentProfileForm({ user, profile }: Props) {
     updateEstablishmentProfileAction,
     initialState,
   );
+
+  // Scroll to top when profile saves successfully
+  useEffect(() => {
+    if (state.success) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [state.success]);
 
   return (
     <form action={formAction} className="grid gap-5 rounded-lg border bg-card p-4 shadow-sm sm:p-5">

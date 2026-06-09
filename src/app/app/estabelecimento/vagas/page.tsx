@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ClipboardList, LockKeyhole, Plus,
 
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
+import { RefreshButton } from "@/components/ui/refresh-button";
 import { getJobStatusLabel } from "@/lib/jobs/formatters";
 import { JOBS_PAGE_SIZE, getJobPostsByEstablishmentPaged } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
@@ -52,6 +53,7 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
+            <RefreshButton />
             <Button asChild variant="outline" className="w-full sm:w-auto">
               <Link href="/app/estabelecimento">
                 <ArrowLeft className="size-4" />

@@ -237,34 +237,39 @@ export async function getJobPostById(jobPostId: string) {
 }
 
 export async function getJobPostsByEstablishment(establishmentId: string) {
-  try {
-    const { data, error } = await getSupabaseAdminClient()
-      .from("JobPost")
-      .select("*")
-      .eq("establishmentId", establishmentId)
-      .order("createdAt", { ascending: false })
-      .returns<JobPost[]>();
+  const { data, error } = await getSupabaseAdminClient()
+    .from("JobPost")
+    .select("*")
+    .eq("establishmentId", establishmentId)
+    .order("createdAt", { ascending: false })
+    .returns<JobPost[]>();
 
-    if (error) {
-      console.error("[getJobPostsByEstablishment] Supabase error:", error);
-      throw error;
-    }
-
-    const jobs = data ?? [];
-    const [acceptedCounts, totalCounts] = await Promise.all([
-      getAcceptedApplicationCounts(jobs.map((job) => job.id)),
-      getTotalApplicationCounts(jobs.map((job) => job.id)),
-    ]);
-
-    return jobs.map((job) => ({
-      ...job,
-      acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
-      totalApplicationCount: totalCounts.get(job.id) ?? 0,
-    })) satisfies EstablishmentJobPost[];
-  } catch (err) {
-    console.error("[getJobPostsByEstablishment] Exception:", err);
-    throw err;
+  if (error) {
+    throw error;
   }
+
+  const jobs = data ?? [];
+  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+
+  // Get total counts by querying all applications without status filter
+  const totalCounts = new Map<string, number>();
+  if (jobs.length > 0) {
+    const { data: allApps } = await getSupabaseAdminClient()
+      .from("JobApplication")
+      .select("jobPostId")
+      .in("jobPostId", jobs.map((j) => j.id))
+      .returns<Array<{ jobPostId: string }>>();
+
+    (allApps ?? []).forEach((app) => {
+      totalCounts.set(app.jobPostId, (totalCounts.get(app.jobPostId) ?? 0) + 1);
+    });
+  }
+
+  return jobs.map((job) => ({
+    ...job,
+    acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+    totalApplicationCount: totalCounts.get(job.id) ?? 0,
+  })) satisfies EstablishmentJobPost[];
 }
 
 export async function getOpenJobPosts(filters: OpenJobFilters = {}) {
@@ -768,43 +773,49 @@ export async function getJobPostsByEstablishmentPaged(
 ): Promise<EstablishmentJobPostsPageResult> {
   const pageNum = Math.max(1, page ?? 1);
 
-  try {
-    const { data, error, count } = await getSupabaseAdminClient()
-      .from("JobPost")
-      .select("*", { count: "exact" })
-      .eq("establishmentId", establishmentId)
-      .order("createdAt", { ascending: false })
-      .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1)
-      .returns<JobPost[]>();
+  const { data, error, count } = await getSupabaseAdminClient()
+    .from("JobPost")
+    .select("*", { count: "exact" })
+    .eq("establishmentId", establishmentId)
+    .order("createdAt", { ascending: false })
+    .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1)
+    .returns<JobPost[]>();
 
-    if (error) {
-      console.error("[getJobPostsByEstablishmentPaged] Supabase error:", error);
-      throw error;
-    }
-
-    const jobs = data ?? [];
-    const total = count ?? 0;
-
-    const [acceptedCounts, totalCounts] = await Promise.all([
-      getAcceptedApplicationCounts(jobs.map((job) => job.id)),
-      getTotalApplicationCounts(jobs.map((job) => job.id)),
-    ]);
-
-    return {
-      items: jobs.map((job) => ({
-        ...job,
-        acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
-        totalApplicationCount: totalCounts.get(job.id) ?? 0,
-      })),
-      total,
-      page: pageNum,
-      pageSize: JOBS_PAGE_SIZE,
-      totalPages: Math.ceil(total / JOBS_PAGE_SIZE),
-    };
-  } catch (err) {
-    console.error("[getJobPostsByEstablishmentPaged] Exception:", err);
-    throw err;
+  if (error) {
+    throw error;
   }
+
+  const jobs = data ?? [];
+  const total = count ?? 0;
+
+  // Get application counts - two separate queries instead of Promise.all
+  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+
+  // Get total counts by querying all applications without status filter
+  const totalCounts = new Map<string, number>();
+  if (jobs.length > 0) {
+    const { data: allApps } = await getSupabaseAdminClient()
+      .from("JobApplication")
+      .select("jobPostId")
+      .in("jobPostId", jobs.map((j) => j.id))
+      .returns<Array<{ jobPostId: string }>>();
+
+    (allApps ?? []).forEach((app) => {
+      totalCounts.set(app.jobPostId, (totalCounts.get(app.jobPostId) ?? 0) + 1);
+    });
+  }
+
+  return {
+    items: jobs.map((job) => ({
+      ...job,
+      acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+      totalApplicationCount: totalCounts.get(job.id) ?? 0,
+    })),
+    total,
+    page: pageNum,
+    pageSize: JOBS_PAGE_SIZE,
+    totalPages: Math.ceil(total / JOBS_PAGE_SIZE),
+  };
 }
 
 export async function getFreelancerApplicationsPaged(

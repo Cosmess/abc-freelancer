@@ -49,7 +49,12 @@ export async function createJobPostAction(
     await createJobPost({
       establishmentId: profile.id,
       ...parsed.data,
-      cep: cleanDocument(parsed.data.cep),
+      // Use establishment profile address automatically
+      city: profile.city || "",
+      neighborhood: profile.neighborhood || undefined,
+      street: profile.street || undefined,
+      number: profile.number || undefined,
+      cep: profile.cep || undefined,
       paymentValue: Math.round(parsed.data.paymentValue * 100),
     });
   } catch (error) {

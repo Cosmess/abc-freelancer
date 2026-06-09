@@ -47,11 +47,7 @@ export const jobPostSchema = z.object({
   title: z.string().trim().min(3, "Informe o titulo da vaga."),
   description: optionalText,
   specialtyId: z.string().trim().min(1, "Selecione uma especialidade."),
-  city: z.string().trim().min(2, "Informe a cidade."),
-  neighborhood: optionalText,
-  street: optionalText,
-  number: optionalText,
-  cep: optionalText,
+  // Address fields removed — uses establishment profile address automatically
   workDate: z.string().trim().min(10, "Informe a data."),
   startTime: z.string().trim().min(4, "Informe o inicio."),
   endTime: z.string().trim().min(4, "Informe o fim."),

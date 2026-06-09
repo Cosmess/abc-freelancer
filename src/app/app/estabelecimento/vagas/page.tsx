@@ -79,16 +79,18 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
                 className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
                 name="filtro"
                 defaultValue={filter ?? ""}
-                onChange={(e) => e.currentTarget.form?.submit()}
               >
                 <option value="">Todas as vagas</option>
                 <option value="com-candidatos">Com candidatos</option>
                 <option value="sem-candidatos">Sem candidatos</option>
               </select>
             </label>
+            <Button type="submit" variant="outline" size="sm" className="h-10">
+              Filtrar
+            </Button>
             {filter && (
-              <Button asChild variant="outline" size="sm">
-                <Link href="/app/estabelecimento/vagas">Limpar filtro</Link>
+              <Button asChild variant="ghost" size="sm" className="h-10">
+                <Link href="/app/estabelecimento/vagas">Limpar</Link>
               </Button>
             )}
           </form>

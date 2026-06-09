@@ -36,30 +36,45 @@ async function assertEmailAvailable(email: string): Promise<AuthActionState | nu
   const existing = await findInternalUserByEmail(email);
 
   if (existing) {
-    return { message: "Este email ja esta cadastrado." };
+    // Generic message to prevent email enumeration
+    return { message: "Este email ja esta em uso. Faca login ou use outro email." };
   }
 
   const authUser = await findAuthUserByEmail(email);
 
   if (authUser) {
-    return {
-      message:
-        "Este email ja existe no Supabase Auth. Se ainda nao confirmou, use o reenvio de verificacao; se ja confirmou, faca login.",
-    };
+    // Same generic message — do not reveal which system holds the email
+    return { message: "Este email ja esta em uso. Faca login ou use outro email." };
   }
 
   return null;
 }
 
 function getAuthErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    if (error.message.toLowerCase().includes("rate limit")) {
-      return "O Supabase limitou o envio de emails por agora. Aguarde alguns minutos e tente novamente.";
-    }
+  const msg =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message: unknown }).message).toLowerCase()
+        : "";
 
-    return error.message;
+  if (msg.includes("rate limit")) {
+    return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+  }
+  if (msg.includes("email already") || msg.includes("duplicate") || msg.includes("already registered")) {
+    return "Este email ja esta em uso.";
+  }
+  if (msg.includes("invalid") && msg.includes("email")) {
+    return "Email invalido.";
+  }
+  if (msg.includes("expired") || msg.includes("invalid token")) {
+    return "Codigo invalido ou expirado.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Erro de conexao. Tente novamente.";
   }
 
+  // Do not return raw internal error messages to the client
   return "Nao foi possivel concluir a operacao agora.";
 }
 

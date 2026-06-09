@@ -537,6 +537,14 @@ export async function updateApplicationStatusForEstablishment(input: {
     throw new Error("Candidatura nao encontrada.");
   }
 
+  // Enforce quantity limit before accepting
+  if (input.status === "ACCEPTED" && application.status !== "ACCEPTED") {
+    const counts = await getAcceptedApplicationCounts([job.id]);
+    if ((counts.get(job.id) ?? 0) >= job.quantity) {
+      throw new Error("Esta vaga ja atingiu o numero maximo de candidatos aceitos.");
+    }
+  }
+
   const now = new Date().toISOString();
   const { error } = await getSupabaseAdminClient()
     .from("JobApplication")

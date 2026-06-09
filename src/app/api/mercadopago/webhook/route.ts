@@ -22,23 +22,26 @@ export async function POST(request: NextRequest) {
     (body?.data as Record<string, unknown>)?.id?.toString() ??
     "";
 
-  // Validate HMAC signature (skip in dev if secret not configured)
+  // Validate HMAC signature — always required
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
 
-  if (secret) {
-    try {
-      WebhookSignatureValidator.validate({
-        xSignature: request.headers.get("x-signature") ?? "",
-        xRequestId: request.headers.get("x-request-id") ?? "",
-        dataId,
-        secret,
-      });
-    } catch (err) {
-      if (err instanceof InvalidWebhookSignatureError) {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
-      return NextResponse.json({ error: "Signature error" }, { status: 401 });
+  if (!secret) {
+    console.error("[webhook] MERCADO_PAGO_WEBHOOK_SECRET nao configurado — rejeitar requisicao");
+    return NextResponse.json({ error: "Webhook nao configurado no servidor" }, { status: 500 });
+  }
+
+  try {
+    WebhookSignatureValidator.validate({
+      xSignature: request.headers.get("x-signature") ?? "",
+      xRequestId: request.headers.get("x-request-id") ?? "",
+      dataId,
+      secret,
+    });
+  } catch (err) {
+    if (err instanceof InvalidWebhookSignatureError) {
+      return NextResponse.json({ error: "Assinatura invalida" }, { status: 401 });
     }
+    return NextResponse.json({ error: "Erro na validacao da assinatura" }, { status: 401 });
   }
 
   const supabase = getSupabaseAdminClient();

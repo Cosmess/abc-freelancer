@@ -21,6 +21,7 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const profile = await getEstablishmentProfile(user.id);
+
   const catalog = profile ? await getJobPostsByEstablishmentPaged(profile.id, page) : { items: [], total: 0, page, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
 
   // Apply filter

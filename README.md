@@ -1,26 +1,72 @@
 # ABC Freelancer
 
-MVP web para conectar estabelecimentos do ABCD Paulista com freelancers/diaristas.
+ABC Freelancer e uma plataforma web para conectar estabelecimentos do ABC Paulista com freelancers para diarias, turnos e vagas pontuais.
 
-## Desenvolvimento
+## Como funciona
+
+1. Usuario cria conta como freelancer ou estabelecimento.
+2. Confirma o email.
+3. Completa o perfil.
+4. Estabelecimento cria vagas.
+5. Freelancer busca vagas e se candidata.
+6. Estabelecimento aceita ou recusa.
+7. O contato so e liberado quando a regra do fluxo permite.
+
+## Tecnologias
+
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- shadcn/ui
+- Supabase Auth
+- Supabase Postgres
+- Supabase Storage
+- Prisma
+- Zod
+- Vercel
+
+## Rodar localmente
 
 ```bash
+npm install
+npm run prisma:generate
+npm run db:push
 npm run dev
 ```
 
 Acesse `http://localhost:3000`.
 
-## Documentacao do projeto
+## Scripts uteis
 
-Veja [codex.md](./codex.md) para arquitetura, seguranca, modelo de dados e ordem de implementacao.
+```bash
+npm run lint
+npm run build
+npm run prisma:validate
+npm run db:seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Documentacao
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [docs/codex.md](./docs/codex.md)
+- [docs/README.md](./docs/README.md)
+- [docs/spec-driven-development/README.md](./docs/spec-driven-development/README.md)
 
-## Deploy on Vercel
+## Arquitetura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `src/app`: rotas e paginas.
+- `src/components`: formularios, layout e UI.
+- `src/lib`: regras de dominio, clientes externos e helpers.
+- `src/server`: guards e Server Actions.
+- `prisma`: schema e seed.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+O projeto e publicado na Vercel.
+
+Antes do deploy, valide:
+
+1. `npm run lint`
+2. `npm run build`
+3. `npm run db:push` quando o schema mudar
+

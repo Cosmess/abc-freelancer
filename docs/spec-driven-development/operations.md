@@ -1,0 +1,47 @@
+# Operations Spec
+
+## Rodar localmente
+
+```bash
+npm install
+npm run prisma:generate
+npm run db:push
+npm run dev
+```
+
+## Validar
+
+```bash
+npm run lint
+npm run build
+```
+
+## Banco
+
+- `npm run db:push` aplica o schema no Supabase.
+- `npm run db:seed` popula especialidades e planos.
+- `npm run prisma:generate` regenera o client.
+
+## Variaveis principais
+
+- `NEXT_PUBLIC_APP_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `MERCADO_PAGO_ACCESS_TOKEN`
+- `MERCADO_PAGO_WEBHOOK_SECRET`
+
+## Deploy
+
+- Publicar na Vercel.
+- Aplicar mudancas de schema com `npm run db:push`.
+
+## Verificacao manual util
+
+- Home com sessao ativa.
+- Login com sessao ativa redirecionando.
+- Upload de foto.
+- Criacao de vaga.
+- Candidatura e aceite.
+- Liberacao de WhatsApp.
+

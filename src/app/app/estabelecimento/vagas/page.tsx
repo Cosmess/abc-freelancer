@@ -22,16 +22,13 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const profile = await getEstablishmentProfile(user.id);
 
-  const catalog = profile ? await getJobPostsByEstablishmentPaged(profile.id, page) : { items: [], total: 0, page, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
+  const filter = params.filtro === "com-candidatos" || params.filtro === "sem-candidatos"
+    ? params.filtro
+    : null;
 
-  // Apply filter
-  let filteredItems = catalog.items;
-  const filter = params.filtro;
-  if (filter === "com-candidatos") {
-    filteredItems = catalog.items.filter((job) => job.totalApplicationCount > 0);
-  } else if (filter === "sem-candidatos") {
-    filteredItems = catalog.items.filter((job) => job.totalApplicationCount === 0);
-  }
+  const catalog = profile
+    ? await getJobPostsByEstablishmentPaged(profile.id, page, filter)
+    : { items: [], total: 0, page, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
 
   function buildPageUrl(targetPage: number) {
     const p = new URLSearchParams();
@@ -97,9 +94,9 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
         )}
 
         <div className="rounded-lg border bg-card shadow-sm">
-          {filteredItems.length ? (
+          {catalog.items.length ? (
             <div className="divide-y divide-border">
-              {filteredItems.map((job) => (
+              {catalog.items.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="flex gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">

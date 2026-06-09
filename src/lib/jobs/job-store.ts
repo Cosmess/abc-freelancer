@@ -770,16 +770,51 @@ export async function getOpenJobListingsPaged(input: {
 export async function getJobPostsByEstablishmentPaged(
   establishmentId: string,
   page?: number,
+  candidatesFilter?: "com-candidatos" | "sem-candidatos" | null,
 ): Promise<EstablishmentJobPostsPageResult> {
   const pageNum = Math.max(1, page ?? 1);
+  const supabase = getSupabaseAdminClient();
 
-  const { data, error, count } = await getSupabaseAdminClient()
+  // If filtering by candidates, first get job IDs that have applications
+  let allowedJobIds: string[] | null = null;
+  if (candidatesFilter) {
+    const { data: appRows } = await supabase
+      .from("JobApplication")
+      .select("jobPostId")
+      .returns<Array<{ jobPostId: string }>>();
+
+    const jobIdsWithApps = Array.from(new Set((appRows ?? []).map((r) => r.jobPostId)));
+
+    if (candidatesFilter === "com-candidatos") {
+      allowedJobIds = jobIdsWithApps;
+    } else {
+      // sem-candidatos: get all establishment job IDs then exclude those with apps
+      const { data: allJobs } = await supabase
+        .from("JobPost")
+        .select("id")
+        .eq("establishmentId", establishmentId)
+        .returns<Array<{ id: string }>>();
+      const withAppsSet = new Set(jobIdsWithApps);
+      allowedJobIds = (allJobs ?? []).map((j) => j.id).filter((id) => !withAppsSet.has(id));
+    }
+
+    if (allowedJobIds.length === 0) {
+      return { items: [], total: 0, page: pageNum, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
+    }
+  }
+
+  let query = supabase
     .from("JobPost")
     .select("*", { count: "exact" })
     .eq("establishmentId", establishmentId)
     .order("createdAt", { ascending: false })
-    .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1)
-    .returns<JobPost[]>();
+    .range((pageNum - 1) * JOBS_PAGE_SIZE, pageNum * JOBS_PAGE_SIZE - 1);
+
+  if (allowedJobIds) {
+    query = query.in("id", allowedJobIds);
+  }
+
+  const { data, error, count } = await query.returns<JobPost[]>();
 
   if (error) {
     throw error;
@@ -788,13 +823,11 @@ export async function getJobPostsByEstablishmentPaged(
   const jobs = data ?? [];
   const total = count ?? 0;
 
-  // Get application counts - two separate queries instead of Promise.all
   const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
 
-  // Get total counts by querying all applications without status filter
   const totalCounts = new Map<string, number>();
   if (jobs.length > 0) {
-    const { data: allApps } = await getSupabaseAdminClient()
+    const { data: allApps } = await supabase
       .from("JobApplication")
       .select("jobPostId")
       .in("jobPostId", jobs.map((j) => j.id))

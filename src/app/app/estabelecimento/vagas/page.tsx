@@ -12,6 +12,7 @@ import { requireEstablishment } from "@/server/guards/auth";
 type Props = {
   searchParams: Promise<{
     pagina?: string;
+    filtro?: string;
   }>;
 };
 
@@ -22,8 +23,18 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
   const profile = await getEstablishmentProfile(user.id);
   const catalog = profile ? await getJobPostsByEstablishmentPaged(profile.id, page) : { items: [], total: 0, page, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
 
+  // Apply filter
+  let filteredItems = catalog.items;
+  const filter = params.filtro;
+  if (filter === "com-candidatos") {
+    filteredItems = catalog.items.filter((job) => job.totalApplicationCount > 0);
+  } else if (filter === "sem-candidatos") {
+    filteredItems = catalog.items.filter((job) => job.totalApplicationCount === 0);
+  }
+
   function buildPageUrl(targetPage: number) {
     const p = new URLSearchParams();
+    if (filter) p.set("filtro", filter);
     if (targetPage > 1) p.set("pagina", String(targetPage));
     const qs = p.toString();
     return `/app/estabelecimento/vagas${qs ? `?${qs}` : ""}`;
@@ -58,10 +69,34 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
           </div>
         </div>
 
+        {/* Filter */}
+        {catalog.items.length > 0 && (
+          <form action="/app/estabelecimento/vagas" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="grid gap-1.5 text-sm font-medium">
+              Filtrar vagas
+              <select
+                className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                name="filtro"
+                defaultValue={filter ?? ""}
+                onChange={(e) => e.currentTarget.form?.submit()}
+              >
+                <option value="">Todas as vagas</option>
+                <option value="com-candidatos">Com candidatos</option>
+                <option value="sem-candidatos">Sem candidatos</option>
+              </select>
+            </label>
+            {filter && (
+              <Button asChild variant="outline" size="sm">
+                <Link href="/app/estabelecimento/vagas">Limpar filtro</Link>
+              </Button>
+            )}
+          </form>
+        )}
+
         <div className="rounded-lg border bg-card shadow-sm">
-          {catalog.items.length ? (
+          {filteredItems.length ? (
             <div className="divide-y divide-border">
-              {catalog.items.map((job) => (
+              {filteredItems.map((job) => (
                 <article key={job.id} className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto] lg:items-center">
                   <div className="flex gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted text-sm font-semibold text-muted-foreground sm:size-14">
@@ -85,9 +120,12 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
                         {job.quantity} vaga(s) —{" "}
                         <span className="font-medium text-foreground">{getJobStatusLabel(job.status)}</span>
                       </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">{job.totalApplicationCount}</span> candidato(s) {job.acceptedApplicationCount > 0 && `(${job.acceptedApplicationCount} aceito(s))`}
+                      </p>
                       {job.acceptedApplicationCount > 0 ? (
                         <p className="mt-1 text-xs text-primary/80">
-                          {job.acceptedApplicationCount} aceite(s) — nao pode ser excluida.
+                          Nao pode ser excluida — tem candidato(s) aceito(s).
                         </p>
                       ) : null}
                     </div>
@@ -122,16 +160,27 @@ export default async function EstablishmentJobsPage({ searchParams }: Props) {
           ) : (
             <div className="p-6">
               <ClipboardList className="mb-4 size-6 text-muted-foreground" />
-              <h2 className="font-semibold">Nenhuma vaga criada</h2>
+              <h2 className="font-semibold">
+                {filter ? "Nenhuma vaga encontrada com este filtro" : "Nenhuma vaga criada"}
+              </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Complete o perfil do estabelecimento e crie a primeira vaga.
+                {filter
+                  ? "Ajuste o filtro para ver mais vagas."
+                  : "Complete o perfil do estabelecimento e crie a primeira vaga."}
               </p>
-              <Button asChild className="mt-4">
-                <Link href="/app/estabelecimento/vagas/nova">
-                  <Plus className="size-4" />
-                  Criar primeira vaga
-                </Link>
-              </Button>
+              {!filter && (
+                <Button asChild className="mt-4">
+                  <Link href="/app/estabelecimento/vagas/nova">
+                    <Plus className="size-4" />
+                    Criar primeira vaga
+                  </Link>
+                </Button>
+              )}
+              {filter && (
+                <Button asChild variant="outline" className="mt-4">
+                  <Link href="/app/estabelecimento/vagas">Limpar filtro</Link>
+                </Button>
+              )}
             </div>
           )}
         </div>

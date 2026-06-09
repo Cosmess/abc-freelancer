@@ -46,6 +46,7 @@ export type JobListing = JobPost & {
 
 export type EstablishmentJobPost = JobPost & {
   acceptedApplicationCount: number;
+  totalApplicationCount: number;
 };
 
 export type FreelancerApplicationListing = JobApplication & {
@@ -187,6 +188,28 @@ async function getAcceptedApplicationCounts(jobPostIds: string[]) {
   return counts;
 }
 
+async function getTotalApplicationCounts(jobPostIds: string[]) {
+  if (!jobPostIds.length) return new Map<string, number>();
+
+  const { data, error } = await getSupabaseAdminClient()
+    .from("JobApplication")
+    .select("jobPostId")
+    .in("jobPostId", Array.from(new Set(jobPostIds)))
+    .returns<Array<{ jobPostId: string }>>();
+
+  if (error) {
+    throw error;
+  }
+
+  const counts = new Map<string, number>();
+
+  (data ?? []).forEach((item) => {
+    counts.set(item.jobPostId, (counts.get(item.jobPostId) ?? 0) + 1);
+  });
+
+  return counts;
+}
+
 export async function getJobPostById(jobPostId: string) {
   const { data, error } = await getSupabaseAdminClient()
     .from("JobPost")
@@ -214,11 +237,15 @@ export async function getJobPostsByEstablishment(establishmentId: string) {
   }
 
   const jobs = data ?? [];
-  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+  const [acceptedCounts, totalCounts] = await Promise.all([
+    getAcceptedApplicationCounts(jobs.map((job) => job.id)),
+    getTotalApplicationCounts(jobs.map((job) => job.id)),
+  ]);
 
   return jobs.map((job) => ({
     ...job,
     acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+    totalApplicationCount: totalCounts.get(job.id) ?? 0,
   })) satisfies EstablishmentJobPost[];
 }
 
@@ -736,12 +763,16 @@ export async function getJobPostsByEstablishmentPaged(
 
   const jobs = data ?? [];
   const total = count ?? 0;
-  const acceptedCounts = await getAcceptedApplicationCounts(jobs.map((job) => job.id));
+  const [acceptedCounts, totalCounts] = await Promise.all([
+    getAcceptedApplicationCounts(jobs.map((job) => job.id)),
+    getTotalApplicationCounts(jobs.map((job) => job.id)),
+  ]);
 
   return {
     items: jobs.map((job) => ({
       ...job,
       acceptedApplicationCount: acceptedCounts.get(job.id) ?? 0,
+      totalApplicationCount: totalCounts.get(job.id) ?? 0,
     })),
     total,
     page: pageNum,

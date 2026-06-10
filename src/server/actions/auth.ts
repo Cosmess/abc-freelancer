@@ -89,6 +89,21 @@ async function createPendingAuthUser(input: {
   return data.user;
 }
 
+async function sendVerificationEmail(email: string) {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${getAppUrl()}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function loginAction(
   _state: AuthActionState,
   formData: FormData,
@@ -234,6 +249,12 @@ export async function signupFreelancerAction(
     return { message: getAuthErrorMessage(error) };
   }
 
+  try {
+    await sendVerificationEmail(parsed.data.email);
+  } catch (error) {
+    console.error("[signupFreelancerAction] Verification email error:", error);
+  }
+
   logSecurity("auth.signup.success", { email: parsed.data.email, role: "FREELANCER" });
   redirect("/auth/confirmar-email");
 }
@@ -288,6 +309,12 @@ export async function signupEstablishmentAction(
     await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
     logSecurity("auth.signup.failure", { email: parsed.data.email, role: "ESTABLISHMENT" });
     return { message: getAuthErrorMessage(error) };
+  }
+
+  try {
+    await sendVerificationEmail(parsed.data.email);
+  } catch (error) {
+    console.error("[signupEstablishmentAction] Verification email error:", error);
   }
 
   logSecurity("auth.signup.success", { email: parsed.data.email, role: "ESTABLISHMENT" });

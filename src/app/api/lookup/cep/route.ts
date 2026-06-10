@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { checkRateLimit, getRateLimitKey } from "@/lib/rate-limit";
+import { logSecurity } from "@/lib/logger";
+
 type ViaCepResponse = {
   cep?: string;
   logradouro?: string;
@@ -10,6 +13,23 @@ type ViaCepResponse = {
 };
 
 export async function GET(request: NextRequest) {
+  const rateLimitResult = checkRateLimit(
+    getRateLimitKey("cep", request),
+    30,
+    60,
+  );
+
+  if (rateLimitResult.limited) {
+    logSecurity("rate_limit.exceeded", { endpoint: "/api/lookup/cep" });
+    return NextResponse.json(
+      { message: "Muitas requisicoes. Aguarde um momento." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimitResult.retryAfterSeconds) },
+      },
+    );
+  }
+
   const cep = request.nextUrl.searchParams.get("cep")?.replace(/\D/g, "") ?? "";
 
   if (cep.length !== 8) {

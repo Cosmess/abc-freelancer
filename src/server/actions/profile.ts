@@ -16,6 +16,7 @@ import {
 } from "@/lib/profiles/profile-store";
 import { uploadProfilePhoto } from "@/lib/storage/profile-photos";
 import { requireEstablishment, requireFreelancer } from "@/server/guards/auth";
+import { logError } from "@/lib/logger";
 
 function flattenErrors(error: {
   flatten: () => { fieldErrors: Record<string, string[] | undefined> };
@@ -39,14 +40,9 @@ function parseAvailability(formData: FormData) {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (error && typeof error === "object" && "message" in error && typeof (error as { message: unknown }).message === "string") {
-    return (error as { message: string }).message;
-  }
-
+  logError("profile action error", {
+    message: error instanceof Error ? error.message : String(error),
+  });
   return "Nao foi possivel salvar o perfil.";
 }
 

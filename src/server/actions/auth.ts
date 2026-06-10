@@ -7,11 +7,11 @@ import {
   confirmAuthEmailIfInternallyVerified,
   createInternalEstablishmentUser,
   createInternalFreelancerUser,
-  findAuthUserByEmail,
   findInternalUserByEmail,
   syncInternalUserFromSupabaseUser,
 } from "@/lib/auth/internal-user-store";
 import { getAppUrl, getRoleHomePath } from "@/lib/auth/paths";
+import { logSecurity } from "@/lib/logger";
 import {
   type AuthActionState,
   establishmentSignupSchema,
@@ -32,14 +32,6 @@ async function assertEmailAvailable(email: string): Promise<AuthActionState | nu
   const existing = await findInternalUserByEmail(email);
 
   if (existing) {
-    // Generic message to prevent email enumeration
-    return { message: "Este email ja esta em uso. Faca login ou use outro email." };
-  }
-
-  const authUser = await findAuthUserByEmail(email);
-
-  if (authUser) {
-    // Same generic message — do not reveal which system holds the email
     return { message: "Este email ja esta em uso. Faca login ou use outro email." };
   }
 
@@ -131,6 +123,7 @@ export async function loginAction(
 
   if (error || !data.user) {
     if (error?.message.toLowerCase().includes("email not confirmed")) {
+      logSecurity("auth.login.email_not_verified", { email: parsed.data.email });
       return {
         message: "Seu email ainda nao foi confirmado. Verifique sua caixa de entrada (e spam) e clique no link de verificacao.",
         emailNotVerified: true,
@@ -138,6 +131,7 @@ export async function loginAction(
       };
     }
 
+    logSecurity("auth.login.failure", { email: parsed.data.email });
     return { message: "Email ou senha invalidos." };
   }
 
@@ -151,6 +145,7 @@ export async function loginAction(
   }
 
   const user = await syncInternalUserFromSupabaseUser(data.user);
+  logSecurity("auth.login.success", { userId: user.id, role: user.role });
   redirect(getRoleHomePath(user.role));
 }
 
@@ -235,9 +230,11 @@ export async function signupFreelancerAction(
     });
   } catch (error) {
     await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
+    logSecurity("auth.signup.failure", { email: parsed.data.email, role: "FREELANCER" });
     return { message: getAuthErrorMessage(error) };
   }
 
+  logSecurity("auth.signup.success", { email: parsed.data.email, role: "FREELANCER" });
   redirect("/auth/confirmar-email");
 }
 
@@ -289,14 +286,17 @@ export async function signupEstablishmentAction(
     });
   } catch (error) {
     await getSupabaseAdminClient().auth.admin.deleteUser(authUserId);
+    logSecurity("auth.signup.failure", { email: parsed.data.email, role: "ESTABLISHMENT" });
     return { message: getAuthErrorMessage(error) };
   }
 
+  logSecurity("auth.signup.success", { email: parsed.data.email, role: "ESTABLISHMENT" });
   redirect("/auth/confirmar-email");
 }
 
 export async function logoutAction() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
+  logSecurity("auth.logout");
   redirect("/login");
 }

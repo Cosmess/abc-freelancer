@@ -18,5 +18,8 @@ export function getAppUrl(): string {
     process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
     "http://localhost:3000";
 
-  return rawUrl.replace(/\\r\\n|\\n|\\r/g, "").trim().replace(/\/+$/, "");
+  return rawUrl
+    .replace(/\\r\\n|\\n|\\r|\r\n|\r|\n/g, "")
+    .trim()
+    .replace(/\/+$/, "");
 }

@@ -474,7 +474,7 @@ export async function getFreelancerCatalog(input: {
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
 
   if (input.city) {
-    query = query.ilike("city", `%${input.city}%`);
+    query = query.ilike("city", `%${input.city.slice(0, 100)}%`);
   }
 
   if (allowedIds) {
@@ -610,15 +610,15 @@ export async function getEstablishmentCatalog(input: {
     .range((page - 1) * CATALOG_PAGE_SIZE, page * CATALOG_PAGE_SIZE - 1);
 
   if (input.city) {
-    query = query.ilike("city", `%${input.city}%`);
+    query = query.ilike("city", `%${input.city.slice(0, 100)}%`);
   }
 
   if (input.neighborhood) {
-    query = query.ilike("neighborhood", `%${input.neighborhood}%`);
+    query = query.ilike("neighborhood", `%${input.neighborhood.slice(0, 100)}%`);
   }
 
   if (input.name) {
-    query = query.ilike("tradeName", `%${input.name}%`);
+    query = query.ilike("tradeName", `%${input.name.slice(0, 100)}%`);
   }
 
   const { data, error, count } = await query.returns<

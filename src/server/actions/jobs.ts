@@ -16,6 +16,7 @@ import {
 } from "@/lib/profiles/profile-store";
 import { jobPostSchema, type ProfileActionState } from "@/lib/profiles/validators";
 import { requireActiveAccess, requireEstablishment, requireFreelancer } from "@/server/guards/auth";
+import { logError } from "@/lib/logger";
 
 function flattenErrors(error: {
   flatten: () => { fieldErrors: Record<string, string[] | undefined> };
@@ -54,9 +55,10 @@ export async function createJobPostAction(
       paymentValue: Math.round(parsed.data.paymentValue * 100),
     });
   } catch (error) {
-    return {
-      message: error instanceof Error ? error.message : "Nao foi possivel criar a vaga.",
-    };
+    logError("createJobPost error", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return { message: "Nao foi possivel criar a vaga." };
   }
 
   revalidatePath("/app/estabelecimento/vagas");

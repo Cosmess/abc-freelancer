@@ -75,21 +75,6 @@ export async function findInternalUserByAuthId(supabaseAuthUserId: string) {
   return data;
 }
 
-export async function findAuthUserByEmail(email: string) {
-  const { data, error } = await getSupabaseAdminClient().auth.admin.listUsers({
-    page: 1,
-    perPage: 1000,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return data.users.find(
-    (user) => user.email?.toLowerCase() === email.toLowerCase(),
-  ) ?? null;
-}
-
 export async function confirmAuthEmailIfInternallyVerified(email: string) {
   const internalUser = await findInternalUserByEmail(email);
 
@@ -97,25 +82,27 @@ export async function confirmAuthEmailIfInternallyVerified(email: string) {
     return false;
   }
 
-  const authUser = await findAuthUserByEmail(email);
+  const { data, error } = await getSupabaseAdminClient().auth.admin.getUserById(
+    internalUser.supabaseAuthUserId,
+  );
 
-  if (!authUser) {
+  if (error || !data.user) {
     return false;
   }
+
+  const authUser = data.user;
 
   if (authUser.email_confirmed_at) {
     return true;
   }
 
-  const { error } = await getSupabaseAdminClient().auth.admin.updateUserById(
+  const { error: updateError } = await getSupabaseAdminClient().auth.admin.updateUserById(
     authUser.id,
-    {
-      email_confirm: true,
-    },
+    { email_confirm: true },
   );
 
-  if (error) {
-    throw error;
+  if (updateError) {
+    throw updateError;
   }
 
   return true;

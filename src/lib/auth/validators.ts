@@ -2,7 +2,9 @@ import { z } from "zod";
 
 const passwordSchema = z
   .string()
-  .min(8, "A senha deve ter pelo menos 8 caracteres.");
+  .min(10, "A senha deve ter pelo menos 10 caracteres.")
+  .regex(/[a-zA-Z]/, "A senha deve conter pelo menos uma letra.")
+  .regex(/[0-9]/, "A senha deve conter pelo menos um numero.");
 
 const termsSchema = z
   .literal("true")

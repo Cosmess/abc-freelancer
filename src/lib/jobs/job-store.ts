@@ -252,11 +252,11 @@ export async function getOpenJobPosts(filters: OpenJobFilters = {}) {
     .order("workDate", { ascending: true });
 
   if (filters.city) {
-    query = query.ilike("city", `%${filters.city}%`);
+    query = query.ilike("city", `%${filters.city.slice(0, 100)}%`);
   }
 
   if (filters.neighborhood) {
-    query = query.ilike("neighborhood", `%${filters.neighborhood}%`);
+    query = query.ilike("neighborhood", `%${filters.neighborhood.slice(0, 100)}%`);
   }
 
   if (filters.specialtyId) {
@@ -747,12 +747,25 @@ export async function getJobPostsByEstablishmentPaged(
   const pageNum = Math.max(1, page ?? 1);
   const supabase = getSupabaseAdminClient();
 
-  // If filtering by candidates, first get job IDs that have applications
+  // If filtering by candidates, scope to this establishment's jobs only
   let allowedJobIds: string[] | null = null;
   if (candidatesFilter) {
+    const { data: estJobs } = await supabase
+      .from("JobPost")
+      .select("id")
+      .eq("establishmentId", establishmentId)
+      .returns<Array<{ id: string }>>();
+
+    const estJobIds = (estJobs ?? []).map((j) => j.id);
+
+    if (estJobIds.length === 0) {
+      return { items: [], total: 0, page: pageNum, pageSize: JOBS_PAGE_SIZE, totalPages: 0 };
+    }
+
     const { data: appRows } = await supabase
       .from("JobApplication")
       .select("jobPostId")
+      .in("jobPostId", estJobIds)
       .returns<Array<{ jobPostId: string }>>();
 
     const jobIdsWithApps = Array.from(new Set((appRows ?? []).map((r) => r.jobPostId)));
@@ -760,14 +773,8 @@ export async function getJobPostsByEstablishmentPaged(
     if (candidatesFilter === "com-candidatos") {
       allowedJobIds = jobIdsWithApps;
     } else {
-      // sem-candidatos: get all establishment job IDs then exclude those with apps
-      const { data: allJobs } = await supabase
-        .from("JobPost")
-        .select("id")
-        .eq("establishmentId", establishmentId)
-        .returns<Array<{ id: string }>>();
       const withAppsSet = new Set(jobIdsWithApps);
-      allowedJobIds = (allJobs ?? []).map((j) => j.id).filter((id) => !withAppsSet.has(id));
+      allowedJobIds = estJobIds.filter((id) => !withAppsSet.has(id));
     }
 
     if (allowedJobIds.length === 0) {

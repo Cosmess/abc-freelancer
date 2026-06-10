@@ -7,6 +7,7 @@ import {
 
 import { syncPaymentFromMP } from "@/lib/mercadopago/subscription";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { logError, logSecurity } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -28,9 +29,7 @@ export async function POST(request: NextRequest) {
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
 
   if (!secret && !isDashboardTest) {
-    console.error(
-      "[webhook] MERCADO_PAGO_WEBHOOK_SECRET nao configurado - rejeitar requisicao",
-    );
+    logError("webhook secret not configured");
     return NextResponse.json(
       { error: "Webhook nao configurado no servidor" },
       { status: 500 },
@@ -47,15 +46,18 @@ export async function POST(request: NextRequest) {
       });
     } catch (err) {
       if (err instanceof InvalidWebhookSignatureError) {
+        logSecurity("payment.webhook.invalid_signature", { dataId, xRequestId });
         return NextResponse.json({ error: "Assinatura invalida" }, { status: 401 });
       }
 
+      logSecurity("payment.webhook.invalid_signature", { dataId, xRequestId });
       return NextResponse.json(
         { error: "Erro na validacao da assinatura" },
         { status: 401 },
       );
     }
   } else if (!isDashboardTest) {
+    logSecurity("payment.webhook.missing_signature", { dataId });
     return NextResponse.json({ error: "Assinatura ausente" }, { status: 401 });
   }
 
@@ -88,13 +90,18 @@ export async function POST(request: NextRequest) {
   }
 
   if (insertError) {
-    console.error("[webhook] Failed to store event:", insertError.message);
+    logError("webhook failed to store event", { message: insertError.message });
     return NextResponse.json({ error: "Storage error" }, { status: 500 });
   }
 
   if (!isDashboardTest) {
+    logSecurity("payment.webhook.received", { type, dataId, action });
     processWebhookEvent({ type, dataId }).catch((err) => {
-      console.error("[webhook] Processing error:", err);
+      logError("webhook processing error", {
+        message: err instanceof Error ? err.message : String(err),
+        dataId,
+        type,
+      });
     });
   }
 
@@ -120,6 +127,10 @@ async function processWebhookEvent(input: {
         .eq("type", input.type ?? "");
     }
   } catch (err) {
-    console.error("[webhook] processWebhookEvent failed:", err);
+    logError("processWebhookEvent failed", {
+      message: err instanceof Error ? err.message : String(err),
+      dataId: input.dataId,
+      type: input.type,
+    });
   }
 }

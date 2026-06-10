@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "audit": "npm audit --audit-level=high"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

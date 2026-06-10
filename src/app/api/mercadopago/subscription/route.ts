@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { syncPaymentFromMP } from "@/lib/mercadopago/subscription";
 import { getCurrentUser } from "@/server/guards/auth";
+import { logError } from "@/lib/logger";
 import { UserRole } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
@@ -9,25 +10,26 @@ export async function GET(request: NextRequest) {
   const paymentId = params.get("payment_id") ?? params.get("collection_id");
   const status = params.get("status");
 
-  // Try to sync from Mercado Pago
-  try {
-    if (paymentId) {
-      await syncPaymentFromMP(paymentId);
-    }
-  } catch (err) {
-    console.error("[checkout-redirect] sync error:", err);
-  }
-
-  // Determine redirect target based on logged-in user's role
+  // Resolve user first — only sync for authenticated sessions to prevent
+  // unauthenticated callers from triggering arbitrary payment lookups.
   const user = await getCurrentUser();
+
+  if (paymentId && user) {
+    try {
+      await syncPaymentFromMP(paymentId);
+    } catch (err) {
+      logError("checkout-redirect sync error", {
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 
   let planPath = "/login";
 
   if (user) {
-    planPath =
-      user.role === UserRole.ESTABLISHMENT
-        ? "/app/estabelecimento/plano"
-        : "/app/freelancer/plano";
+    planPath = user.role === UserRole.ESTABLISHMENT
+      ? "/app/estabelecimento/plano"
+      : "/app/freelancer/plano";
   }
 
   if (status === "approved") {

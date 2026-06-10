@@ -1,10 +1,19 @@
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { ResendVerificationForm } from "@/components/forms/resend-verification-form";
 import { Button } from "@/components/ui/button";
+import { getRoleHomePath } from "@/lib/auth/paths";
+import { getCurrentUser } from "@/server/guards/auth";
 
-export default function ConfirmEmailPage() {
+export default async function ConfirmEmailPage() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect(getRoleHomePath(user.role));
+  }
+
   return (
     <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md flex-col justify-center">

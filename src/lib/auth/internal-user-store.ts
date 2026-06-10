@@ -183,7 +183,6 @@ export async function createInternalFreelancerUser(input: {
   email: string;
   fullName: string;
   phone?: string;
-  whatsapp?: string;
   city: string;
   neighborhood?: string;
   termsAcceptedAt: string;
@@ -218,7 +217,6 @@ export async function createInternalFreelancerUser(input: {
     userId: user.id,
     fullName: input.fullName,
     email: input.email,
-    whatsapp: input.whatsapp || null,
     city: input.city,
     neighborhood: input.neighborhood || null,
     createdAt: now.toISOString(),
@@ -238,7 +236,6 @@ export async function createInternalEstablishmentUser(input: {
   responsibleName: string;
   phone?: string;
   tradeName: string;
-  whatsapp?: string;
   city: string;
   neighborhood?: string;
   termsAcceptedAt: string;
@@ -275,7 +272,6 @@ export async function createInternalEstablishmentUser(input: {
       userId: user.id,
       tradeName: input.tradeName,
       email: input.email,
-      whatsapp: input.whatsapp || null,
       city: input.city,
       neighborhood: input.neighborhood || null,
       createdAt: now.toISOString(),

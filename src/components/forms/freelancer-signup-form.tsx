@@ -18,9 +18,9 @@ export function FreelancerSignupForm() {
   );
 
   return (
-    <form action={formAction} className="grid gap-3 sm:gap-4">
+    <form action={formAction} className="grid gap-4 sm:gap-5">
       {state.message ? (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive sm:px-4 sm:py-2.5 sm:text-sm">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs leading-5 text-destructive sm:px-4 sm:py-2.5 sm:text-sm">
           {state.message}
         </div>
       ) : null}
@@ -28,7 +28,7 @@ export function FreelancerSignupForm() {
       <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
         Nome completo
         <input
-          className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+          className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
           name="fullName"
           autoComplete="name"
           required
@@ -36,11 +36,11 @@ export function FreelancerSignupForm() {
         <FieldError errors={state.errors?.fullName} />
       </label>
 
-      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
           Email
           <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+            className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
             name="email"
             type="email"
             autoComplete="email"
@@ -51,7 +51,7 @@ export function FreelancerSignupForm() {
         <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
           Senha
           <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+            className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
             name="password"
             type="password"
             autoComplete="new-password"
@@ -61,49 +61,38 @@ export function FreelancerSignupForm() {
         </label>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
           Telefone
           <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+            className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
             name="phone"
             inputMode="tel"
           />
           <FieldError errors={state.errors?.phone} />
         </label>
         <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
-          WhatsApp
-          <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
-            name="whatsapp"
-            inputMode="tel"
-          />
-          <FieldError errors={state.errors?.whatsapp} />
-        </label>
-      </div>
-
-      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
-        <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
           Cidade
           <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+            className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
             name="city"
             required
           />
           <FieldError errors={state.errors?.city} />
         </label>
-        <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
-          Bairro
-          <input
-            className="h-10 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
-            name="neighborhood"
-          />
-          <FieldError errors={state.errors?.neighborhood} />
-        </label>
       </div>
 
+      <label className="grid gap-1 text-xs font-medium sm:gap-1.5 sm:text-sm">
+        Bairro
+        <input
+          className="h-11 rounded-md border bg-input px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10"
+          name="neighborhood"
+        />
+        <FieldError errors={state.errors?.neighborhood} />
+      </label>
+
       <div className="grid gap-2">
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className="flex items-start gap-3 rounded-md border border-border/60 bg-muted/20 p-3 cursor-pointer sm:p-3.5">
           <input
             type="checkbox"
             name="termsAccepted"
@@ -111,7 +100,7 @@ export function FreelancerSignupForm() {
             className="mt-0.5 size-4 shrink-0 accent-primary"
             required
           />
-          <span className="text-sm text-muted-foreground leading-5">
+          <span className="text-sm leading-5 text-muted-foreground">
             Li e aceito os{" "}
             <Link
               href="/termos"

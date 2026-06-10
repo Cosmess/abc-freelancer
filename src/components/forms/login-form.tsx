@@ -57,13 +57,21 @@ export function LoginForm() {
           {loginPending ? "Entrando..." : "Entrar"}
         </Button>
 
-        <div className="flex justify-between gap-3 text-sm text-muted-foreground">
-          <Link className="hover:text-foreground" href="/cadastro/freelancer">
-            Sou freelancer
-          </Link>
-          <Link className="hover:text-foreground" href="/cadastro/estabelecimento">
-            Tenho estabelecimento
-          </Link>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/auth/confirmar-email">
+              <MailCheck className="size-4" />
+              Confirmar email
+            </Link>
+          </Button>
+          <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground sm:justify-end sm:gap-4">
+            <Link className="hover:text-foreground" href="/cadastro/freelancer">
+              Sou freelancer
+            </Link>
+            <Link className="hover:text-foreground" href="/cadastro/estabelecimento">
+              Tenho estabelecimento
+            </Link>
+          </div>
         </div>
       </form>
 

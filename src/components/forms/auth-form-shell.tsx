@@ -15,13 +15,13 @@ export function AuthFormShell({
   children,
 }: AuthFormShellProps) {
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-5 sm:py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-lg flex-col justify-center gap-4 sm:gap-6 sm:max-w-md">
+    <main className="min-h-screen bg-muted/30 px-3 py-4 text-foreground sm:px-5 sm:py-10">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-md flex-col justify-center gap-4 sm:gap-6">
         <Link href="/" className="text-sm font-medium text-muted-foreground">
           ABC Freelancer
         </Link>
         <section className="rounded-lg border bg-background p-4 shadow-sm sm:p-5">
-          <div className="mb-4 sm:mb-5 space-y-1.5 sm:space-y-2">
+          <div className="mb-4 space-y-1.5 sm:mb-5 sm:space-y-2">
             <h1 className="text-xl font-semibold tracking-normal sm:text-2xl">{title}</h1>
             <p className="text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6">
               {description}

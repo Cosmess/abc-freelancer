@@ -27,7 +27,7 @@
 - Publico: `/`, `/login`, `/cadastro`, `/vagas`, `/estabelecimentos`.
 - Freelancer: `/app/freelancer`, `/app/freelancer/perfil`, `/app/freelancer/candidaturas`, `/app/freelancer/plano`.
 - Estabelecimento: `/app/estabelecimento`, `/app/estabelecimento/perfil`, `/app/estabelecimento/vagas`, `/app/estabelecimento/vagas/nova`, `/app/estabelecimento/vagas/[id]/candidatos`, `/app/estabelecimento/plano`.
-- Admin: `/admin`.
+- Admin: `/admin` existe como rota protegida reservada, sem tela operacional no escopo imediato.
 
 ## Padrão
 
@@ -49,4 +49,4 @@
 - Supabase Storage: fotos de perfil e logos.
 - ViaCEP: preenchimento de endereco por CEP.
 - Google Maps: link gerado a partir do endereco da vaga.
-
+- Mercado Pago Checkout Pro: criacao de preferencia, redirecionamento hospedado e webhook de pagamento.

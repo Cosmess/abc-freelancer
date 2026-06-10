@@ -23,10 +23,6 @@ function flattenErrors(error: {
   return error.flatten().fieldErrors;
 }
 
-function cleanDocument(value: string | undefined): string | undefined {
-  return value?.replace(/\D/g, "");
-}
-
 export async function createJobPostAction(
   _state: ProfileActionState,
   formData: FormData,

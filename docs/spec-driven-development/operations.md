@@ -31,6 +31,13 @@ npm run build
 - `MERCADO_PAGO_ACCESS_TOKEN`
 - `MERCADO_PAGO_WEBHOOK_SECRET`
 
+## Mercado Pago
+
+- O app usa Checkout Pro com pagamentos avulsos.
+- O controle de plano e expiracao de acesso fica no banco do app.
+- Pagamentos aprovados pelo Mercado Pago renovam o periodo local de acesso.
+- Nao usa Checkout Transparente, Public Key no frontend ou assinatura recorrente `PreApproval`.
+
 ## Deploy
 
 - Publicar na Vercel.
@@ -44,4 +51,3 @@ npm run build
 - Criacao de vaga.
 - Candidatura e aceite.
 - Liberacao de WhatsApp.
-

@@ -23,7 +23,6 @@ Campos importantes:
 
 - `tradeName`
 - `legalName`
-- `cnpj`
 - `whatsapp`
 - `email`
 - `type`
@@ -44,7 +43,6 @@ Perfil do freelancer, com endereco, `profilePhotoUrl`, bio e experiencia.
 Campos importantes:
 
 - `fullName`
-- `cpf`
 - `whatsapp`
 - `email`
 - `profilePhotoUrl`
@@ -117,7 +115,6 @@ Campos importantes:
 ## Regras
 
 - `unique(jobPostId, freelancerId)`
-- `cnpj` e `cpf` devem ser unicos quando preenchidos.
+- CPF e CNPJ nao fazem parte do cadastro do produto.
 - Vaga `OPEN` aparece na busca publica.
 - Vaga `FINISHED` aparece como encerrada, nao como aberta.
-

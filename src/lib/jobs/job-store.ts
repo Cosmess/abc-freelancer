@@ -194,34 +194,6 @@ async function getAcceptedApplicationCounts(jobPostIds: string[]) {
   }
 }
 
-async function getTotalApplicationCounts(jobPostIds: string[]) {
-  if (!jobPostIds.length) return new Map<string, number>();
-
-  try {
-    const { data, error } = await getSupabaseAdminClient()
-      .from("JobApplication")
-      .select("jobPostId")
-      .in("jobPostId", Array.from(new Set(jobPostIds)))
-      .returns<Array<{ jobPostId: string }>>();
-
-    if (error) {
-      console.error("[getTotalApplicationCounts] Supabase error:", error);
-      throw error;
-    }
-
-    const counts = new Map<string, number>();
-
-    (data ?? []).forEach((item) => {
-      counts.set(item.jobPostId, (counts.get(item.jobPostId) ?? 0) + 1);
-    });
-
-    return counts;
-  } catch (err) {
-    console.error("[getTotalApplicationCounts] Exception:", err);
-    return new Map<string, number>();
-  }
-}
-
 export async function getJobPostById(jobPostId: string) {
   const { data, error } = await getSupabaseAdminClient()
     .from("JobPost")

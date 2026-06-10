@@ -75,16 +75,16 @@ export function PlanPageContent({
   return (
     <div className="grid gap-6">
       {/* Alerts */}
-      {success && (
+          {success && (
         <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
           <CheckCircle2 className="size-4 shrink-0" />
-          {success === "assinatura-autorizada" && "Assinatura autorizada com sucesso! Seu acesso esta ativo."}
+          {success === "pagamento-aprovado" && "Pagamento aprovado com sucesso! Seu acesso esta ativo."}
         </div>
       )}
       {notice && (
         <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
-          {notice === "aguardando-pagamento" && "Seu pagamento esta sendo processado. Aguarde a confirmacao."}
-          {notice === "assinatura-existente" && "Voce ja tem uma assinatura em andamento."}
+          {notice === "aguardando-pagamento" && "Seu pagamento esta sendo processado. Aguarde a confirmacao do Mercado Pago."}
+          {notice === "assinatura-existente" && "Voce ja tem acesso ativo."}
         </div>
       )}
       {error && (

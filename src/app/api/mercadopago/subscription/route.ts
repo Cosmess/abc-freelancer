@@ -1,29 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import {
-  syncSubscriptionFromMP,
-  syncSubscriptionByExternalReference,
-} from "@/lib/mercadopago/subscription";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { syncPaymentFromMP } from "@/lib/mercadopago/subscription";
 import { getCurrentUser } from "@/server/guards/auth";
-import { getRoleHomePath } from "@/lib/auth/paths";
 import { UserRole } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const preapprovalId = params.get("preapproval_id");
-  const externalReference = params.get("external_reference");
+  const paymentId = params.get("payment_id") ?? params.get("collection_id");
   const status = params.get("status");
 
   // Try to sync from Mercado Pago
   try {
-    if (preapprovalId) {
-      await syncSubscriptionFromMP(preapprovalId);
-    } else if (externalReference) {
-      await syncSubscriptionByExternalReference(externalReference);
+    if (paymentId) {
+      await syncPaymentFromMP(paymentId);
     }
   } catch (err) {
-    console.error("[subscription-redirect] sync error:", err);
+    console.error("[checkout-redirect] sync error:", err);
   }
 
   // Determine redirect target based on logged-in user's role
@@ -38,11 +30,11 @@ export async function GET(request: NextRequest) {
         : "/app/freelancer/plano";
   }
 
-  if (status === "authorized") {
-    return NextResponse.redirect(new URL(`${planPath}?sucesso=assinatura-autorizada`, request.url));
+  if (status === "approved") {
+    return NextResponse.redirect(new URL(`${planPath}?sucesso=pagamento-aprovado`, request.url));
   }
 
-  if (status === "cancelled" || status === "rejected") {
+  if (status === "cancelled" || status === "rejected" || status === "failure") {
     return NextResponse.redirect(new URL(`${planPath}?erro=pagamento-cancelado`, request.url));
   }
 

@@ -28,10 +28,6 @@ function flattenErrors(error: {
   return error.flatten().fieldErrors;
 }
 
-function cleanDocument(value: string | undefined): string | undefined {
-  return value?.replace(/\D/g, "");
-}
-
 async function assertEmailAvailable(email: string): Promise<AuthActionState | null> {
   const existing = await findInternalUserByEmail(email);
 

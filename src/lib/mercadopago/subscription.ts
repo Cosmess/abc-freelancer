@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { Payment, PreApproval } from "mercadopago";
+import { Payment, Preference } from "mercadopago";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAppUrl } from "@/lib/auth/paths";
@@ -13,7 +13,6 @@ export type PlanRecord = {
   priceCents: number;
   currency: string;
   trialDays: number;
-  mercadoPagoPreapprovalPlanId: string | null;
   active: boolean;
 };
 
@@ -24,6 +23,7 @@ export type SubscriptionRecord = {
   provider: string;
   status: string;
   mercadoPagoPreapprovalId: string | null;
+  mercadoPagoPreferenceId: string | null;
   mercadoPagoPayerId: string | null;
   startedAt: string | null;
   trialEndsAt: string | null;
@@ -46,12 +46,7 @@ export type PaymentHistoryRecord = {
   createdAt: string;
 };
 
-const MP_TO_DB_STATUS: Record<string, string> = {
-  authorized: "AUTHORIZED",
-  paused: "PAUSED",
-  cancelled: "CANCELLED",
-  pending: "PENDING",
-};
+const PLAN_PERIOD_DAYS = 30;
 
 export async function getPlanForRole(role: string): Promise<PlanRecord | null> {
   const { data, error } = await getSupabaseAdminClient()
@@ -103,7 +98,9 @@ export async function initSubscription(input: {
   const supabase = getSupabaseAdminClient();
   const now = new Date().toISOString();
   const subscriptionId = randomUUID();
-  const backUrl = `${getAppUrl()}/api/mercadopago/subscription`;
+  const appUrl = getAppUrl();
+  const callbackUrl = `${appUrl}/api/mercadopago/subscription`;
+  const webhookUrl = `${appUrl}/api/mercadopago/webhook`;
 
   const { error: insertError } = await supabase
     .from("Subscription")
@@ -119,92 +116,131 @@ export async function initSubscription(input: {
 
   if (insertError) throw insertError;
 
-  const preapproval = new PreApproval(getMercadoPagoClient());
+  const preference = new Preference(getMercadoPagoClient());
 
   const body: Record<string, unknown> = {
-    reason: input.plan.name,
-    back_url: backUrl,
-    payer_email: input.userEmail,
+    items: [
+      {
+        id: input.plan.id,
+        title: input.plan.name,
+        description: input.plan.description ?? undefined,
+        quantity: 1,
+        unit_price: input.plan.priceCents / 100,
+        currency_id: input.plan.currency,
+      },
+    ],
+    payer: {
+      email: input.userEmail,
+    },
     external_reference: subscriptionId,
-    status: "pending",
+    notification_url: webhookUrl,
+    back_urls: {
+      success: callbackUrl,
+      failure: callbackUrl,
+      pending: callbackUrl,
+    },
+    auto_return: "approved",
+    metadata: {
+      subscription_id: subscriptionId,
+      user_id: input.userId,
+      plan_id: input.plan.id,
+    },
   };
 
-  if (input.plan.mercadoPagoPreapprovalPlanId) {
-    body.preapproval_plan_id = input.plan.mercadoPagoPreapprovalPlanId;
-  } else {
-    body.auto_recurring = {
-      frequency: 1,
-      frequency_type: "months",
-      transaction_amount: input.plan.priceCents / 100,
-      currency_id: input.plan.currency,
-    };
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mpResponse = await preapproval.create({ body } as any);
+  const mpResponse = await preference.create({ body } as any);
 
   if (!mpResponse?.id || !mpResponse?.init_point) {
     await supabase.from("Subscription").delete().eq("id", subscriptionId);
-    throw new Error("Mercado Pago nao retornou dados da assinatura.");
+    throw new Error("Mercado Pago nao retornou dados do checkout.");
   }
 
   await supabase
     .from("Subscription")
-    .update({ mercadoPagoPreapprovalId: String(mpResponse.id), updatedAt: new Date().toISOString() })
+    .update({
+      mercadoPagoPreferenceId: String(mpResponse.id),
+      updatedAt: new Date().toISOString(),
+    })
     .eq("id", subscriptionId);
 
   return { checkoutUrl: String(mpResponse.init_point) };
 }
 
-export async function syncSubscriptionFromMP(preapprovalId: string): Promise<void> {
-  const supabase = getSupabaseAdminClient();
-  const preapproval = new PreApproval(getMercadoPagoClient());
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mp = await preapproval.get({ id: preapprovalId }) as any;
-
-  if (!mp) return;
-
-  const dbStatus = MP_TO_DB_STATUS[String(mp.status)] ?? "PENDING";
-  const now = new Date().toISOString();
-
-  const { data: existing } = await supabase
-    .from("Subscription")
-    .select("id")
-    .eq("mercadoPagoPreapprovalId", preapprovalId)
-    .maybeSingle<{ id: string }>();
-
-  if (!existing) return;
-
-  await supabase
-    .from("Subscription")
-    .update({
-      status: dbStatus,
-      mercadoPagoPayerId: mp.payer_id ? String(mp.payer_id) : null,
-      startedAt: mp.date_created ? new Date(mp.date_created).toISOString() : null,
-      currentPeriodStart: mp.next_payment_date
-        ? new Date(mp.next_payment_date).toISOString()
-        : null,
-      cancelledAt:
-        dbStatus === "CANCELLED" ? now : null,
-      updatedAt: now,
-    })
-    .eq("id", existing.id);
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }
 
-export async function syncSubscriptionByExternalReference(
-  externalReference: string,
-): Promise<void> {
+export async function syncPaymentFromMP(paymentId: string): Promise<void> {
   const supabase = getSupabaseAdminClient();
+  const paymentClient = new Payment(getMercadoPagoClient());
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mp = await paymentClient.get({ id: Number(paymentId) }) as any;
+  if (!mp) return;
+
+  const subscriptionId =
+    mp.external_reference ??
+    mp.metadata?.subscription_id ??
+    mp.metadata?.subscriptionId ??
+    null;
+
+  if (!subscriptionId) return;
 
   const { data: subscription } = await supabase
     .from("Subscription")
-    .select("id,mercadoPagoPreapprovalId")
-    .eq("id", externalReference)
-    .maybeSingle<{ id: string; mercadoPagoPreapprovalId: string | null }>();
+    .select("id,userId,planId,currentPeriodEnd")
+    .eq("id", String(subscriptionId))
+    .maybeSingle<{
+      id: string;
+      userId: string;
+      planId: string;
+      currentPeriodEnd: string | null;
+    }>();
 
-  if (subscription?.mercadoPagoPreapprovalId) {
-    await syncSubscriptionFromMP(subscription.mercadoPagoPreapprovalId);
+  if (!subscription) return;
+
+  await recordPaymentFromMP({
+    userId: subscription.userId,
+    paymentId,
+    subscriptionId: subscription.id,
+  });
+
+  const status = String(mp.status ?? "");
+  const now = new Date();
+
+  if (status === "approved") {
+    const currentEnd = subscription.currentPeriodEnd
+      ? new Date(subscription.currentPeriodEnd)
+      : null;
+    const periodStart = currentEnd && currentEnd > now ? currentEnd : now;
+    const periodEnd = addDays(periodStart, PLAN_PERIOD_DAYS);
+
+    await supabase
+      .from("Subscription")
+      .update({
+        status: "ACTIVE",
+        mercadoPagoPayerId: mp.payer?.id ? String(mp.payer.id) : null,
+        startedAt: mp.date_approved
+          ? new Date(mp.date_approved).toISOString()
+          : now.toISOString(),
+        currentPeriodStart: periodStart.toISOString(),
+        currentPeriodEnd: periodEnd.toISOString(),
+        cancelledAt: null,
+        updatedAt: now.toISOString(),
+      })
+      .eq("id", subscription.id);
+  } else if (["cancelled", "rejected"].includes(status)) {
+    await supabase
+      .from("Subscription")
+      .update({
+        status: "CANCELLED",
+        cancelledAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      })
+      .eq("id", subscription.id)
+      .eq("status", "PENDING");
   }
 }
 

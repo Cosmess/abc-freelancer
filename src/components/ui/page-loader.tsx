@@ -1,38 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 
 export function PageLoader() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
-  // Detect navigation immediately by listening to router events
   useEffect(() => {
-    const handleRouteChange = () => {
+    const showTimer = setTimeout(() => {
       setIsVisible(true);
-    };
-
-    // Listen to pathname changes (route has already changed)
-    const currentPath = pathname;
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, [pathname]);
-
-  useEffect(() => {
-    // Show loader immediately when pathname changes
-    setIsVisible(true);
-
-    // Hide loader quickly (200ms for snappy feel)
-    const timer = setTimeout(() => {
+    }, 0);
+    const hideTimer = setTimeout(() => {
       setIsVisible(false);
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
   }, [pathname]);
 
   if (!isVisible) return null;

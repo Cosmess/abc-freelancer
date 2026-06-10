@@ -8,7 +8,7 @@ ABC Freelancer conecta estabelecimentos locais com freelancers para demandas ope
 
 - Freelancer
 - Estabelecimento
-- Admin
+- Admin reservado para operacao futura
 
 ## Valor principal
 
@@ -16,6 +16,7 @@ ABC Freelancer conecta estabelecimentos locais com freelancers para demandas ope
 - Candidatura organizada.
 - Contato liberado sob regra.
 - Perfil com foto/logo e endereco.
+- Cadastro sem CPF ou CNPJ.
 
 ## Experiencia atual
 
@@ -23,4 +24,3 @@ ABC Freelancer conecta estabelecimentos locais com freelancers para demandas ope
 - Painel por role.
 - Catalogo de vagas com Maps e WhatsApp.
 - Perfil com upload de foto comprimida.
-

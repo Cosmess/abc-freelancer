@@ -18,9 +18,10 @@ export async function createSubscriptionAction() {
     redirect(getRoleHomePath(user.role));
   }
 
-  // Block if user already has an active or pending subscription
+  // Block if user already has active access. Pending payments can be retried
+  // by generating a fresh Checkout Pro preference.
   const existing = await getLatestSubscriptionForUser(user.id);
-  if (existing && ["ACTIVE", "AUTHORIZED", "PENDING"].includes(existing.status)) {
+  if (existing && ["ACTIVE", "AUTHORIZED"].includes(existing.status)) {
     const planPath =
       user.role === "ESTABLISHMENT"
         ? "/app/estabelecimento/plano"

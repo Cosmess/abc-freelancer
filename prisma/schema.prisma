@@ -261,7 +261,6 @@ model Plan {
   priceCents                    Int
   currency                      String   @default("BRL")
   trialDays                     Int      @default(7)
-  mercadoPagoPreapprovalPlanId  String?
   active                        Boolean  @default(true)
   createdAt                     DateTime @default(now())
   updatedAt                     DateTime @updatedAt
@@ -279,6 +278,7 @@ model Subscription {
   provider                 SubscriptionProvider @default(MERCADO_PAGO)
   status                   SubscriptionStatus   @default(TRIALING)
   mercadoPagoPreapprovalId String?              @unique
+  mercadoPagoPreferenceId  String?              @unique
   mercadoPagoPayerId       String?
   startedAt                DateTime?
   trialEndsAt              DateTime?

@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { WebhookSignatureValidator, InvalidWebhookSignatureError } from "mercadopago";
-
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
-  syncSubscriptionFromMP,
-  recordPaymentFromMP,
-} from "@/lib/mercadopago/subscription";
+  InvalidWebhookSignatureError,
+  WebhookSignatureValidator,
+} from "mercadopago";
+
+import { syncPaymentFromMP } from "@/lib/mercadopago/subscription";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest) {
   let body: Record<string, unknown>;
@@ -21,36 +21,54 @@ export async function POST(request: NextRequest) {
     request.nextUrl.searchParams.get("data.id") ??
     (body?.data as Record<string, unknown>)?.id?.toString() ??
     "";
+  const isDashboardTest = body.live_mode === false && dataId === "123456";
+  const xSignature = request.headers.get("x-signature") ?? "";
+  const xRequestId = request.headers.get("x-request-id") ?? "";
 
-  // Validate HMAC signature — always required
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
 
-  if (!secret) {
-    console.error("[webhook] MERCADO_PAGO_WEBHOOK_SECRET nao configurado — rejeitar requisicao");
-    return NextResponse.json({ error: "Webhook nao configurado no servidor" }, { status: 500 });
+  if (!secret && !isDashboardTest) {
+    console.error(
+      "[webhook] MERCADO_PAGO_WEBHOOK_SECRET nao configurado - rejeitar requisicao",
+    );
+    return NextResponse.json(
+      { error: "Webhook nao configurado no servidor" },
+      { status: 500 },
+    );
   }
 
-  try {
-    WebhookSignatureValidator.validate({
-      xSignature: request.headers.get("x-signature") ?? "",
-      xRequestId: request.headers.get("x-request-id") ?? "",
-      dataId,
-      secret,
-    });
-  } catch (err) {
-    if (err instanceof InvalidWebhookSignatureError) {
-      return NextResponse.json({ error: "Assinatura invalida" }, { status: 401 });
+  if (secret && xSignature && xRequestId) {
+    try {
+      WebhookSignatureValidator.validate({
+        xSignature,
+        xRequestId,
+        dataId,
+        secret,
+      });
+    } catch (err) {
+      if (err instanceof InvalidWebhookSignatureError) {
+        return NextResponse.json({ error: "Assinatura invalida" }, { status: 401 });
+      }
+
+      return NextResponse.json(
+        { error: "Erro na validacao da assinatura" },
+        { status: 401 },
+      );
     }
-    return NextResponse.json({ error: "Erro na validacao da assinatura" }, { status: 401 });
+  } else if (!isDashboardTest) {
+    return NextResponse.json({ error: "Assinatura ausente" }, { status: 401 });
+  }
+
+  if (isDashboardTest) {
+    return NextResponse.json({ received: true, test: true });
   }
 
   const supabase = getSupabaseAdminClient();
   const eventId = body.id ? String(body.id) : null;
-  const requestId = request.headers.get("x-request-id") ?? null;
+  const requestId = xRequestId || null;
   const action = typeof body.action === "string" ? body.action : null;
   const type = typeof body.type === "string" ? body.type : null;
 
-  // Idempotency: store event, skip if duplicate
   const { error: insertError } = await supabase
     .from("MercadoPagoWebhookEvent")
     .insert({
@@ -60,14 +78,13 @@ export async function POST(request: NextRequest) {
       action,
       dataId: dataId || null,
       requestId,
-      signature: request.headers.get("x-signature"),
+      signature: xSignature || null,
       payload: body,
       createdAt: new Date().toISOString(),
     });
 
   if (insertError?.code === "23505") {
-    // Duplicate — already processed or in progress
-    return NextResponse.json({ received: true });
+    return NextResponse.json({ received: true, test: isDashboardTest });
   }
 
   if (insertError) {
@@ -75,45 +92,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Storage error" }, { status: 500 });
   }
 
-  // Process asynchronously (respond 200 quickly, then process)
-  processWebhookEvent({ type, dataId, body }).catch((err) => {
-    console.error("[webhook] Processing error:", err);
-  });
+  if (!isDashboardTest) {
+    processWebhookEvent({ type, dataId }).catch((err) => {
+      console.error("[webhook] Processing error:", err);
+    });
+  }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true, test: isDashboardTest });
 }
 
 async function processWebhookEvent(input: {
   type: string | null;
   dataId: string;
-  body: Record<string, unknown>;
 }) {
   const supabase = getSupabaseAdminClient();
 
   try {
-    if (input.type === "subscription_preapproval" && input.dataId) {
-      await syncSubscriptionFromMP(input.dataId);
-    } else if (input.type === "payment" && input.dataId) {
-      // Find user via subscription linked to this payment
-      const { data: sub } = await supabase
-        .from("Subscription")
-        .select("id,userId")
-        .eq(
-          "mercadoPagoPreapprovalId",
-          (input.body?.data as Record<string, unknown>)?.preapproval_id?.toString() ?? "__none__",
-        )
-        .maybeSingle<{ id: string; userId: string }>();
-
-      if (sub) {
-        await recordPaymentFromMP({
-          userId: sub.userId,
-          paymentId: input.dataId,
-          subscriptionId: sub.id,
-        });
-      }
+    if (input.type === "payment" && input.dataId) {
+      await syncPaymentFromMP(input.dataId);
     }
 
-    // Mark as processed
     if (input.dataId) {
       await supabase
         .from("MercadoPagoWebhookEvent")

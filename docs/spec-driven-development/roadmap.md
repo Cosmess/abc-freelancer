@@ -12,8 +12,11 @@
 
 ## Proximo
 
-- Lookup de CNPJ
-- Mercado Pago completo
-- Webhook de assinatura
-- Admin operacional
+- Checkout Pro do Mercado Pago completo
+- Webhook de pagamento
 
+## Fora do escopo imediato
+
+- Lookup de CNPJ
+- Tela operacional de admin
+- Assinaturas recorrentes gerenciadas pelo Mercado Pago

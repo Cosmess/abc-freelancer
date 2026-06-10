@@ -47,6 +47,7 @@ export type PaymentHistoryRecord = {
 };
 
 const PLAN_PERIOD_DAYS = 30;
+const ACTIVE_SUBSCRIPTION_STATUSES = ["ACTIVE", "AUTHORIZED"];
 
 export async function getPlanForRole(role: string): Promise<PlanRecord | null> {
   const { data, error } = await getSupabaseAdminClient()
@@ -72,6 +73,33 @@ export async function getLatestSubscriptionForUser(userId: string): Promise<Subs
 
   if (error) throw error;
   return data;
+}
+
+export async function getLatestActiveSubscriptionForUser(
+  userId: string,
+): Promise<SubscriptionRecord | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("Subscription")
+    .select("*")
+    .eq("userId", userId)
+    .in("status", ACTIVE_SUBSCRIPTION_STATUSES)
+    .gt("currentPeriodEnd", new Date().toISOString())
+    .order("currentPeriodEnd", { ascending: false })
+    .limit(1)
+    .maybeSingle<SubscriptionRecord>();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getCurrentSubscriptionForUser(
+  userId: string,
+): Promise<SubscriptionRecord | null> {
+  const active = await getLatestActiveSubscriptionForUser(userId);
+
+  if (active) return active;
+
+  return getLatestSubscriptionForUser(userId);
 }
 
 export async function getRecentPaymentsForUser(
@@ -197,13 +225,12 @@ export async function syncPaymentFromMP(paymentId: string): Promise<void> {
 
   const { data: subscription } = await supabase
     .from("Subscription")
-    .select("id,userId,planId,currentPeriodEnd")
+    .select("id,userId,planId")
     .eq("id", String(subscriptionId))
     .maybeSingle<{
       id: string;
       userId: string;
       planId: string;
-      currentPeriodEnd: string | null;
     }>();
 
   if (!subscription) return;
@@ -218,21 +245,30 @@ export async function syncPaymentFromMP(paymentId: string): Promise<void> {
   const now = new Date();
 
   if (status === "approved") {
-    const currentEnd = subscription.currentPeriodEnd
-      ? new Date(subscription.currentPeriodEnd)
-      : null;
-    const periodStart = currentEnd && currentEnd > now ? currentEnd : now;
+    const paidAt = mp.date_approved ? new Date(mp.date_approved) : now;
+    const periodStart = paidAt;
     const periodEnd = addDays(periodStart, PLAN_PERIOD_DAYS);
+    const periodStartIso = periodStart.toISOString();
+
+    await supabase
+      .from("Subscription")
+      .update({
+        status: "EXPIRED",
+        currentPeriodEnd: periodStartIso,
+        updatedAt: now.toISOString(),
+      })
+      .eq("userId", subscription.userId)
+      .neq("id", subscription.id)
+      .in("status", ACTIVE_SUBSCRIPTION_STATUSES)
+      .gt("currentPeriodEnd", periodStartIso);
 
     await supabase
       .from("Subscription")
       .update({
         status: "ACTIVE",
         mercadoPagoPayerId: mp.payer?.id ? String(mp.payer.id) : null,
-        startedAt: mp.date_approved
-          ? new Date(mp.date_approved).toISOString()
-          : now.toISOString(),
-        currentPeriodStart: periodStart.toISOString(),
+        startedAt: periodStartIso,
+        currentPeriodStart: periodStartIso,
         currentPeriodEnd: periodEnd.toISOString(),
         cancelledAt: null,
         updatedAt: now.toISOString(),

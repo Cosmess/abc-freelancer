@@ -8,7 +8,7 @@ import {
   type InternalUser,
 } from "@/lib/auth/internal-user-store";
 import { getRoleHomePath } from "@/lib/auth/paths";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getLatestActiveSubscriptionForUser } from "@/lib/mercadopago/subscription";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const getCurrentUser = cache(async () => {
@@ -63,16 +63,8 @@ export function requireAdmin() {
 }
 
 async function hasActiveSubscription(userId: string): Promise<boolean> {
-  const activeStatuses = ["ACTIVE", "AUTHORIZED", "TRIALING"];
-  const { data } = await getSupabaseAdminClient()
-    .from("Subscription")
-    .select("id")
-    .eq("userId", userId)
-    .in("status", activeStatuses)
-    .limit(1)
-    .maybeSingle();
-
-  return Boolean(data);
+  const subscription = await getLatestActiveSubscriptionForUser(userId);
+  return Boolean(subscription);
 }
 
 export async function requireActiveAccess(user: InternalUser): Promise<void> {

@@ -32,9 +32,14 @@ type Props = {
   planName: string;
   planDescription: string | null;
   priceCents: number;
+  trialStartsAt: string | Date;
+  trialEndsAt: string | Date;
   trialDaysLeft: number;
   trialStatus: TrialStatus;
   subscriptionStatus: SubStatus;
+  subscriptionStartedAt: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
   recentPayments: Payment[];
   notice: string | null;
   success: string | null;
@@ -61,13 +66,28 @@ const PAYMENT_STATUS_LABELS: Record<string, string> = {
   charged_back: "Estornado",
 };
 
+function formatDate(value: string | Date | null) {
+  if (!value) return "Nao informado";
+
+  return new Date(value).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
 export function PlanPageContent({
   planName,
   planDescription,
   priceCents,
+  trialStartsAt,
+  trialEndsAt,
   trialDaysLeft,
   trialStatus,
   subscriptionStatus,
+  subscriptionStartedAt,
+  currentPeriodStart,
+  currentPeriodEnd,
   recentPayments,
   notice,
   success,
@@ -77,8 +97,10 @@ export function PlanPageContent({
 
   const isSubscribed = subscriptionStatus === "ACTIVE" || subscriptionStatus === "AUTHORIZED";
   const isPending = subscriptionStatus === "PENDING";
-  const canSubscribe = !isSubscribed;
   const priceFormatted = `R$ ${(priceCents / 100).toFixed(2).replace(".", ",")}`;
+  const latestApprovedPayment = recentPayments.find((payment) => payment.status === "approved");
+  const paymentDate = latestApprovedPayment?.paidAt ?? null;
+  const planStartedAt = currentPeriodStart ?? subscriptionStartedAt;
 
   return (
     <div className="grid gap-6">
@@ -127,7 +149,6 @@ export function PlanPageContent({
           {trialStatus === "active" ? (
             <p className="text-sm font-medium text-primary">
               Trial ativo - {trialDaysLeft} dia{trialDaysLeft !== 1 ? "s" : ""} restante
-              {trialDaysLeft !== 1 ? "s" : ""}
             </p>
           ) : (
             <p className="text-sm font-medium text-destructive">
@@ -175,11 +196,49 @@ export function PlanPageContent({
           </li>
         </ul>
 
+        <div className="mt-5 grid gap-3 rounded-lg border bg-muted/40 p-4 text-sm sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium uppercase text-muted-foreground">Trial gratis</p>
+            <p className="mt-1 font-medium">
+              {formatDate(trialStartsAt)} ate {formatDate(trialEndsAt)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase text-muted-foreground">Pagamento do plano</p>
+            <p className="mt-1 font-medium">{formatDate(paymentDate)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase text-muted-foreground">Inicio do plano</p>
+            <p className="mt-1 font-medium">{formatDate(planStartedAt)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase text-muted-foreground">Expira em</p>
+            <p className="mt-1 font-medium">{formatDate(currentPeriodEnd)}</p>
+          </div>
+        </div>
+
         <div className="mt-6">
           {isSubscribed ? (
-            <div className="flex items-center gap-2 rounded-lg bg-primary/15 px-4 py-3 text-sm font-medium text-primary">
-              <CheckCircle2 className="size-4" />
-              Assinatura ativa - voce tem acesso completo
+            <div className="grid gap-3 rounded-lg bg-primary/10 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                <CheckCircle2 className="size-4" />
+                Assinatura ativa - voce tem acesso completo
+              </div>
+              <form action={formAction}>
+                <Button className="w-full" disabled={pending} type="submit" variant="outline">
+                  {pending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Aguarde...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="size-4" />
+                      Renovar por {priceFormatted}/mes
+                    </>
+                  )}
+                </Button>
+              </form>
             </div>
           ) : isPending ? (
             <div className="grid gap-3 rounded-lg bg-muted px-4 py-3">
@@ -203,7 +262,7 @@ export function PlanPageContent({
                 </Button>
               </form>
             </div>
-          ) : canSubscribe ? (
+          ) : (
             <form action={formAction}>
               <Button className="w-full" size="lg" disabled={pending} type="submit">
                 {pending ? (
@@ -219,7 +278,7 @@ export function PlanPageContent({
                 )}
               </Button>
             </form>
-          ) : null}
+          )}
         </div>
       </div>
 

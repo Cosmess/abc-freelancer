@@ -8,7 +8,7 @@ import { PlanPageContent } from "@/components/forms/plan-page-content";
 import { UserRole } from "@/generated/prisma/client";
 import {
   getPlanForRole,
-  getLatestSubscriptionForUser,
+  getCurrentSubscriptionForUser,
   getRecentPaymentsForUser,
 } from "@/lib/mercadopago/subscription";
 import { requireFreelancer } from "@/server/guards/auth";
@@ -25,7 +25,7 @@ export default async function FreelancerPlanPage({ searchParams }: Props) {
 
   const [plan, subscription, payments] = await Promise.all([
     getPlanForRole(UserRole.FREELANCER),
-    getLatestSubscriptionForUser(user.id),
+    getCurrentSubscriptionForUser(user.id),
     getRecentPaymentsForUser(user.id),
   ]);
 
@@ -68,9 +68,14 @@ export default async function FreelancerPlanPage({ searchParams }: Props) {
             planName={plan.name}
             planDescription={plan.description}
             priceCents={plan.priceCents}
+            trialStartsAt={user.trialStartsAt}
+            trialEndsAt={user.trialEndsAt}
             trialDaysLeft={trialDaysLeft}
             trialStatus={trialStatus}
             subscriptionStatus={subStatus}
+            subscriptionStartedAt={subscription?.startedAt ?? null}
+            currentPeriodStart={subscription?.currentPeriodStart ?? null}
+            currentPeriodEnd={subscription?.currentPeriodEnd ?? null}
             recentPayments={payments}
             success={params.sucesso ?? null}
             notice={params.aviso ?? null}

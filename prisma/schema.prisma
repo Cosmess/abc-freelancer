@@ -317,6 +317,10 @@ model PaymentHistory {
   installments                      Int?
   payerEmail                        String?
   paidAt                            DateTime?
+  mercadoPagoRefundId               String?
+  refundStatus                      String?
+  refundAmountCents                 Int?
+  refundedAt                        DateTime?
   rawPayload                        Json?
   createdAt                         DateTime             @default(now())
   updatedAt                         DateTime             @updatedAt

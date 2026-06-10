@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { Payment, Preference } from "mercadopago";
+import { Payment, PaymentRefund, Preference } from "mercadopago";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAppUrl } from "@/lib/auth/paths";
@@ -42,11 +42,18 @@ export type PaymentHistoryRecord = {
   amountCents: number | null;
   currency: string | null;
   paidAt: string | null;
+  mercadoPagoPaymentId: string | null;
+  mercadoPagoRefundId: string | null;
+  refundStatus: string | null;
+  refundAmountCents: number | null;
+  refundedAt: string | null;
   payerEmail: string | null;
   createdAt: string;
 };
 
 const PLAN_PERIOD_DAYS = 30;
+const REFUND_WINDOW_DAYS = 7;
+const REFUND_WINDOW_MS = REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 const ACTIVE_SUBSCRIPTION_STATUSES = ["ACTIVE", "AUTHORIZED"];
 
 export async function getPlanForRole(role: string): Promise<PlanRecord | null> {
@@ -125,7 +132,9 @@ export async function getRecentPaymentsForUser(
 ): Promise<PaymentHistoryRecord[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("PaymentHistory")
-    .select("id,userId,status,statusDetail,amountCents,currency,paidAt,payerEmail,createdAt")
+    .select(
+      "id,userId,status,statusDetail,amountCents,currency,paidAt,mercadoPagoPaymentId,mercadoPagoRefundId,refundStatus,refundAmountCents,refundedAt,payerEmail,createdAt",
+    )
     .eq("userId", userId)
     .order("createdAt", { ascending: false })
     .limit(limit)
@@ -351,32 +360,134 @@ export async function recordPaymentFromMP(input: {
     paymentTypeId: mp.payment_type_id ? String(mp.payment_type_id) : null,
     payerEmail: mp.payer?.email ? String(mp.payer.email) : null,
     paidAt: mp.date_approved ? new Date(mp.date_approved).toISOString() : null,
+    mercadoPagoRefundId: null,
+    refundStatus: null,
+    refundAmountCents: null,
+    refundedAt: null,
     rawPayload: mp,
     createdAt: now,
     updatedAt: now,
   });
 }
 
-export async function cancelLatestPaidSubscriptionForUser(userId: string): Promise<boolean> {
+async function getLatestApprovedPaymentForSubscription(subscriptionId: string): Promise<PaymentHistoryRecord | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("PaymentHistory")
+    .select(
+      "id,userId,status,statusDetail,amountCents,currency,paidAt,mercadoPagoPaymentId,mercadoPagoRefundId,refundStatus,refundAmountCents,refundedAt,payerEmail,createdAt",
+    )
+    .eq("subscriptionId", subscriptionId)
+    .eq("provider", "MERCADO_PAGO")
+    .eq("status", "approved")
+    .order("paidAt", { ascending: false })
+    .order("createdAt", { ascending: false })
+    .limit(1)
+    .maybeSingle<PaymentHistoryRecord>();
+
+  if (error) throw error;
+  return data;
+}
+
+function isWithinRefundWindow(paidAt: string | null, now = new Date()): boolean {
+  if (!paidAt) return false;
+
+  const paidAtTime = new Date(paidAt).getTime();
+  if (Number.isNaN(paidAtTime)) return false;
+
+  return now.getTime() - paidAtTime <= REFUND_WINDOW_MS;
+}
+
+function toCents(amount: number | null | undefined): number | null {
+  if (amount == null) return null;
+  return Math.round(Number(amount) * 100);
+}
+
+export type CancelSubscriptionOutcome = "cancelled" | "refunded" | "not_found";
+
+export async function cancelLatestPaidSubscriptionForUser(
+  userId: string,
+): Promise<CancelSubscriptionOutcome> {
   const supabase = getSupabaseAdminClient();
   const subscription = await getLatestPaidSubscriptionForUser(userId);
 
-  if (!subscription) return false;
+  if (!subscription) return "not_found";
 
-  const now = new Date().toISOString();
+  const payment = await getLatestApprovedPaymentForSubscription(subscription.id);
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const paymentId = payment?.mercadoPagoPaymentId ? Number(payment.mercadoPagoPaymentId) : null;
+  const paidAt = payment?.paidAt ?? subscription.startedAt;
+  const refundEligible = Boolean(paymentId && isWithinRefundWindow(paidAt, now));
+
+  if (refundEligible) {
+    if (!payment) {
+      throw new Error("Pagamento aprovado nao encontrado para reembolso.");
+    }
+
+    const alreadyRefunded = Boolean(payment?.refundStatus || payment?.refundedAt || payment?.mercadoPagoRefundId);
+
+    if (!alreadyRefunded) {
+      const refundClient = new PaymentRefund(getMercadoPagoClient());
+      const refund = await refundClient.total({
+        payment_id: paymentId as number,
+        requestOptions: {
+          idempotencyKey: `refund:${paymentId}`,
+        },
+      });
+
+      if (!refund?.id) {
+        throw new Error("Mercado Pago nao retornou dados do reembolso.");
+      }
+
+      const refundDate = refund.date_created ? new Date(refund.date_created).toISOString() : nowIso;
+
+      const { error: paymentUpdateError } = await supabase
+        .from("PaymentHistory")
+        .update({
+          mercadoPagoRefundId: String(refund.id),
+          refundStatus: refund.status ? String(refund.status) : "approved",
+          refundAmountCents: toCents(refund.amount_refunded_to_payer ?? refund.amount),
+          refundedAt: refundDate,
+          updatedAt: nowIso,
+        })
+        .eq("id", payment.id)
+        .select("id")
+        .maybeSingle<{ id: string }>();
+
+      if (paymentUpdateError) throw paymentUpdateError;
+    }
+
+    const { error } = await supabase
+      .from("Subscription")
+      .update({
+        status: "CANCELLED",
+        currentPeriodEnd: nowIso,
+        cancelledAt: nowIso,
+        updatedAt: nowIso,
+      })
+      .eq("id", subscription.id)
+      .in("status", ["ACTIVE", "AUTHORIZED", "CANCELLED"])
+      .select("id")
+      .maybeSingle<{ id: string }>();
+
+    if (error) throw error;
+    return "refunded";
+  }
+
   const { error, data } = await supabase
     .from("Subscription")
     .update({
       status: "CANCELLED",
-      cancelledAt: now,
-      updatedAt: now,
+      cancelledAt: nowIso,
+      updatedAt: nowIso,
     })
     .eq("id", subscription.id)
     .in("status", ["ACTIVE", "AUTHORIZED"])
-    .gt("currentPeriodEnd", now)
+    .gt("currentPeriodEnd", nowIso)
     .select("id")
     .maybeSingle<{ id: string }>();
 
   if (error) throw error;
-  return Boolean(data);
+  if (!data) return "not_found";
+  return "cancelled";
 }

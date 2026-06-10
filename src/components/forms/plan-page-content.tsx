@@ -24,6 +24,10 @@ type Payment = {
   amountCents: number | null;
   currency: string | null;
   paidAt: string | null;
+  mercadoPagoRefundId: string | null;
+  refundStatus: string | null;
+  refundAmountCents: number | null;
+  refundedAt: string | null;
   payerEmail: string | null;
   createdAt: string;
 };
@@ -120,6 +124,8 @@ export function PlanPageContent({
             "Seu pagamento esta sendo processado. Aguarde a confirmacao do Mercado Pago."}
           {notice === "assinatura-existente" && "Voce ja tem acesso ativo."}
           {notice === "assinatura-cancelada" && "Assinatura cancelada com sucesso."}
+          {notice === "reembolso-aprovado" &&
+            "Reembolso integral aprovado. A assinatura foi cancelada."}
           {notice === "assinatura-nao-encontrada" &&
             "Nenhuma assinatura ativa foi encontrada para cancelar."}
         </div>
@@ -129,6 +135,8 @@ export function PlanPageContent({
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error === "mercadopago" &&
             "Nao foi possivel conectar ao Mercado Pago. Tente novamente."}
+          {error === "reembolso" &&
+            "Nao foi possivel concluir o reembolso. Tente novamente em instantes."}
           {error === "plano-nao-encontrado" &&
             "Plano nao encontrado. Entre em contato com o suporte."}
           {error === "pagamento-cancelado" &&
@@ -361,6 +369,13 @@ export function PlanPageContent({
                       ? new Date(payment.paidAt).toLocaleDateString("pt-BR")
                       : new Date(payment.createdAt).toLocaleDateString("pt-BR")}
                   </p>
+                  {payment.refundStatus && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Reembolso:{" "}
+                      {PAYMENT_STATUS_LABELS[payment.refundStatus] ?? payment.refundStatus}
+                      {payment.refundedAt ? ` em ${formatDate(payment.refundedAt)}` : ""}
+                    </p>
+                  )}
                 </div>
                 {payment.amountCents != null && (
                   <p className="text-sm font-semibold text-primary">

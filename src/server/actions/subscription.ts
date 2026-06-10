@@ -60,12 +60,20 @@ export async function cancelSubscriptionAction() {
     user.role === "ESTABLISHMENT"
       ? "/app/estabelecimento/plano"
       : "/app/freelancer/plano";
+  try {
+    const result = await cancelLatestPaidSubscriptionForUser(user.id);
 
-  const cancelled = await cancelLatestPaidSubscriptionForUser(user.id);
+    if (result === "refunded") {
+      redirect(`${planPath}?aviso=reembolso-aprovado`);
+    }
 
-  if (!cancelled) {
+    if (result === "cancelled") {
+      redirect(`${planPath}?aviso=assinatura-cancelada`);
+    }
+
     redirect(`${planPath}?aviso=assinatura-nao-encontrada`);
+  } catch (error) {
+    console.error("[cancelSubscriptionAction] Mercado Pago cancellation error:", error);
+    redirect(`${planPath}?erro=reembolso`);
   }
-
-  redirect(`${planPath}?aviso=assinatura-cancelada`);
 }

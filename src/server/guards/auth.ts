@@ -8,7 +8,7 @@ import {
   type InternalUser,
 } from "@/lib/auth/internal-user-store";
 import { getRoleHomePath } from "@/lib/auth/paths";
-import { getLatestActiveSubscriptionForUser } from "@/lib/mercadopago/subscription";
+import { getLatestPaidSubscriptionForUser } from "@/lib/mercadopago/subscription";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const getCurrentUser = cache(async () => {
@@ -63,7 +63,7 @@ export function requireAdmin() {
 }
 
 async function hasActiveSubscription(userId: string): Promise<boolean> {
-  const subscription = await getLatestActiveSubscriptionForUser(userId);
+  const subscription = await getLatestPaidSubscriptionForUser(userId);
   return Boolean(subscription);
 }
 

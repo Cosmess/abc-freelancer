@@ -92,6 +92,23 @@ export async function getLatestActiveSubscriptionForUser(
   return data;
 }
 
+export async function getLatestPaidSubscriptionForUser(
+  userId: string,
+): Promise<SubscriptionRecord | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("Subscription")
+    .select("*")
+    .eq("userId", userId)
+    .in("status", ["ACTIVE", "AUTHORIZED", "CANCELLED"])
+    .gt("currentPeriodEnd", new Date().toISOString())
+    .order("currentPeriodEnd", { ascending: false })
+    .limit(1)
+    .maybeSingle<SubscriptionRecord>();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getCurrentSubscriptionForUser(
   userId: string,
 ): Promise<SubscriptionRecord | null> {
@@ -338,4 +355,28 @@ export async function recordPaymentFromMP(input: {
     createdAt: now,
     updatedAt: now,
   });
+}
+
+export async function cancelLatestPaidSubscriptionForUser(userId: string): Promise<boolean> {
+  const supabase = getSupabaseAdminClient();
+  const subscription = await getLatestPaidSubscriptionForUser(userId);
+
+  if (!subscription) return false;
+
+  const now = new Date().toISOString();
+  const { error, data } = await supabase
+    .from("Subscription")
+    .update({
+      status: "CANCELLED",
+      cancelledAt: now,
+      updatedAt: now,
+    })
+    .eq("id", subscription.id)
+    .in("status", ["ACTIVE", "AUTHORIZED"])
+    .gt("currentPeriodEnd", now)
+    .select("id")
+    .maybeSingle<{ id: string }>();
+
+  if (error) throw error;
+  return Boolean(data);
 }

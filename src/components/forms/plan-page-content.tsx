@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { CheckCircle2, Clock, CreditCard, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { createSubscriptionAction } from "@/server/actions/subscription";
+import { cancelSubscriptionAction, createSubscriptionAction } from "@/server/actions/subscription";
 
 type TrialStatus = "active" | "expired";
 type SubStatus =
@@ -32,6 +32,7 @@ type Props = {
   planName: string;
   planDescription: string | null;
   priceCents: number;
+  referenceNow: string;
   trialStartsAt: string | Date;
   trialEndsAt: string | Date;
   trialDaysLeft: number;
@@ -44,16 +45,6 @@ type Props = {
   notice: string | null;
   success: string | null;
   error: string | null;
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: "Ativa",
-  AUTHORIZED: "Autorizada",
-  PENDING: "Pendente",
-  CANCELLED: "Cancelada",
-  PAUSED: "Pausada",
-  EXPIRED: "Expirada",
-  PAST_DUE: "Pagamento em atraso",
 };
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
@@ -80,6 +71,7 @@ export function PlanPageContent({
   planName,
   planDescription,
   priceCents,
+  referenceNow,
   trialStartsAt,
   trialEndsAt,
   trialDaysLeft,
@@ -94,8 +86,18 @@ export function PlanPageContent({
   error,
 }: Props) {
   const [, formAction, pending] = useActionState(createSubscriptionAction, undefined);
+  const [, cancelFormAction, cancelPending] = useActionState(cancelSubscriptionAction, undefined);
+  const referenceNowMs = new Date(referenceNow).getTime();
 
-  const isSubscribed = subscriptionStatus === "ACTIVE" || subscriptionStatus === "AUTHORIZED";
+  const isActiveSubscription =
+    subscriptionStatus === "ACTIVE" || subscriptionStatus === "AUTHORIZED";
+  const paidUntil = currentPeriodEnd ? new Date(currentPeriodEnd) : null;
+  const hasPaidAccess = Boolean(paidUntil && paidUntil.getTime() > referenceNowMs && subscriptionStatus);
+  const daysRemaining = paidUntil
+    ? Math.max(0, Math.ceil((paidUntil.getTime() - referenceNowMs) / 86_400_000))
+    : 0;
+  const isCancelledWithAccess = subscriptionStatus === "CANCELLED" && hasPaidAccess;
+  const isPaidSubscription = hasPaidAccess && subscriptionStatus !== null;
   const isPending = subscriptionStatus === "PENDING";
   const priceFormatted = `R$ ${(priceCents / 100).toFixed(2).replace(".", ",")}`;
   const latestApprovedPayment = recentPayments.find((payment) => payment.status === "approved");
@@ -117,6 +119,9 @@ export function PlanPageContent({
           {notice === "aguardando-pagamento" &&
             "Seu pagamento esta sendo processado. Aguarde a confirmacao do Mercado Pago."}
           {notice === "assinatura-existente" && "Voce ja tem acesso ativo."}
+          {notice === "assinatura-cancelada" && "Assinatura cancelada com sucesso."}
+          {notice === "assinatura-nao-encontrada" &&
+            "Nenhuma assinatura ativa foi encontrada para cancelar."}
         </div>
       )}
 
@@ -131,7 +136,38 @@ export function PlanPageContent({
         </div>
       )}
 
-      {!isSubscribed && (
+      {subscriptionStatus === "CANCELLED" ? (
+        <div
+          className={[
+            "flex items-center gap-3 rounded-lg border px-4 py-3",
+            isCancelledWithAccess
+              ? "border-primary/30 bg-primary/10"
+              : "border-destructive/30 bg-destructive/10",
+          ].join(" ")}
+        >
+          <Clock
+            className={[
+              "size-5 shrink-0",
+              isCancelledWithAccess ? "text-primary" : "text-destructive",
+            ].join(" ")}
+          />
+          <div>
+            <p
+              className={[
+                "text-sm font-medium",
+                isCancelledWithAccess ? "text-primary" : "text-destructive",
+              ].join(" ")}
+            >
+              Assinatura cancelada
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {isCancelledWithAccess
+                ? `Voce ainda pode usar por ${daysRemaining} dia${daysRemaining !== 1 ? "s" : ""} antes do bloqueio.`
+                : "O acesso desta assinatura ja foi encerrado."}
+            </p>
+          </div>
+        </div>
+      ) : !isPaidSubscription && (
         <div
           className={[
             "flex items-center gap-3 rounded-lg border px-4 py-3",
@@ -160,15 +196,17 @@ export function PlanPageContent({
         </div>
       )}
 
-      {isSubscribed && (
+      {isPaidSubscription && subscriptionStatus !== "CANCELLED" && (
         <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3">
           <Clock className="size-5 shrink-0 text-primary" />
           <div>
             <p className="text-sm font-medium text-primary">
-              Assinatura {STATUS_LABELS[subscriptionStatus ?? ""] ?? subscriptionStatus}
+              {isCancelledWithAccess ? "Assinatura cancelada" : "Assinatura ativa"}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              O trial foi encerrado no pagamento aprovado.
+              {isCancelledWithAccess
+                ? `Voce ainda pode usar por ${daysRemaining} dia${daysRemaining !== 1 ? "s" : ""} antes do bloqueio.`
+                : `Voce ainda pode usar por ${daysRemaining} dia${daysRemaining !== 1 ? "s" : ""}.`}
             </p>
           </div>
         </div>
@@ -199,10 +237,6 @@ export function PlanPageContent({
           </li>
           <li className="flex items-center gap-2">
             <CheckCircle2 className="size-4 shrink-0 text-primary" />
-            Suporte por WhatsApp
-          </li>
-          <li className="flex items-center gap-2">
-            <CheckCircle2 className="size-4 shrink-0 text-primary" />
             Cancele quando quiser
           </li>
         </ul>
@@ -229,12 +263,8 @@ export function PlanPageContent({
         </div>
 
         <div className="mt-6">
-          {isSubscribed ? (
+          {isPaidSubscription ? (
             <div className="grid gap-3 rounded-lg bg-primary/10 px-4 py-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                <CheckCircle2 className="size-4" />
-                Assinatura ativa - voce tem acesso completo
-              </div>
               <form action={formAction}>
                 <Button className="w-full" disabled={pending} type="submit" variant="outline">
                   {pending ? (
@@ -250,6 +280,26 @@ export function PlanPageContent({
                   )}
                 </Button>
               </form>
+
+              {isActiveSubscription && (
+                <form action={cancelFormAction}>
+                  <Button
+                    className="w-full"
+                    disabled={cancelPending}
+                    type="submit"
+                    variant="destructive"
+                  >
+                    {cancelPending ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Aguarde...
+                      </>
+                    ) : (
+                      "Cancelar plano"
+                    )}
+                  </Button>
+                </form>
+              )}
             </div>
           ) : isPending ? (
             <div className="grid gap-3 rounded-lg bg-muted px-4 py-3">

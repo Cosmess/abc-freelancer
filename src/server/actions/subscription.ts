@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getRoleHomePath } from "@/lib/auth/paths";
 import {
+  cancelLatestPaidSubscriptionForUser,
   getPlanForRole,
   initSubscription,
 } from "@/lib/mercadopago/subscription";
@@ -46,4 +47,25 @@ export async function createSubscriptionAction() {
   }
 
   redirect(checkoutUrl);
+}
+
+export async function cancelSubscriptionAction() {
+  const user = await requireUser();
+
+  if (user.role === "ADMIN") {
+    redirect(getRoleHomePath(user.role));
+  }
+
+  const planPath =
+    user.role === "ESTABLISHMENT"
+      ? "/app/estabelecimento/plano"
+      : "/app/freelancer/plano";
+
+  const cancelled = await cancelLatestPaidSubscriptionForUser(user.id);
+
+  if (!cancelled) {
+    redirect(`${planPath}?aviso=assinatura-nao-encontrada`);
+  }
+
+  redirect(`${planPath}?aviso=assinatura-cancelada`);
 }

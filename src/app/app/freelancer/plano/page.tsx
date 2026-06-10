@@ -68,6 +68,7 @@ export default async function FreelancerPlanPage({ searchParams }: Props) {
             planName={plan.name}
             planDescription={plan.description}
             priceCents={plan.priceCents}
+            referenceNow={now.toISOString()}
             trialStartsAt={user.trialStartsAt}
             trialEndsAt={user.trialEndsAt}
             trialDaysLeft={trialDaysLeft}

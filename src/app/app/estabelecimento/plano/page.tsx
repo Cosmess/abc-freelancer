@@ -33,6 +33,14 @@ export default async function EstablishmentPlanPage({ searchParams }: Props) {
   const trialEndsAt = new Date(user.trialEndsAt);
   const trialDaysLeft = Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / 86_400_000));
   const trialStatus = now <= trialEndsAt ? "active" : "expired";
+  const hasPaidAccess = subscription?.currentPeriodEnd
+    ? new Date(subscription.currentPeriodEnd) > now
+    : false;
+  const hasApprovedPayment = payments.some((payment) => payment.status === "approved");
+  const notice =
+    params.aviso === "aguardando-pagamento" && (hasPaidAccess || hasApprovedPayment)
+      ? null
+      : params.aviso ?? null;
 
   const subStatus = subscription?.status as
     | "ACTIVE"
@@ -79,7 +87,7 @@ export default async function EstablishmentPlanPage({ searchParams }: Props) {
             currentPeriodEnd={subscription?.currentPeriodEnd ?? null}
             recentPayments={payments}
             success={params.sucesso ?? null}
-            notice={params.aviso ?? null}
+            notice={notice}
             error={params.erro ?? null}
           />
         ) : (

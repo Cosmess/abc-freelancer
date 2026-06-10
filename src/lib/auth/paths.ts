@@ -13,9 +13,10 @@ export function getRoleHomePath(role: UserRole): string {
 }
 
 export function getAppUrl(): string {
-  return (
+  const rawUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
-    "http://localhost:3000"
-  );
+    "http://localhost:3000";
+
+  return rawUrl.replace(/\\r\\n|\\n|\\r/g, "").trim().replace(/\/+$/, "");
 }

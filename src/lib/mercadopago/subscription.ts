@@ -147,8 +147,15 @@ export async function initSubscription(input: {
     },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mpResponse = await preference.create({ body } as any);
+  let mpResponse: Awaited<ReturnType<Preference["create"]>>;
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mpResponse = await preference.create({ body } as any);
+  } catch (error) {
+    await supabase.from("Subscription").delete().eq("id", subscriptionId);
+    throw error;
+  }
 
   if (!mpResponse?.id || !mpResponse?.init_point) {
     await supabase.from("Subscription").delete().eq("id", subscriptionId);

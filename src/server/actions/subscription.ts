@@ -48,7 +48,8 @@ export async function createSubscriptionAction() {
       plan,
     });
     checkoutUrl = result.checkoutUrl;
-  } catch {
+  } catch (error) {
+    console.error("[createSubscriptionAction] Mercado Pago checkout error:", error);
     const planPath =
       user.role === "ESTABLISHMENT"
         ? "/app/estabelecimento/plano"

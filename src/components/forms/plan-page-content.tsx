@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button";
 import { createSubscriptionAction } from "@/server/actions/subscription";
 
 type TrialStatus = "active" | "expired";
-type SubStatus = "ACTIVE" | "AUTHORIZED" | "PENDING" | "CANCELLED" | "PAUSED" | "EXPIRED" | "PAST_DUE" | null;
+type SubStatus =
+  | "ACTIVE"
+  | "AUTHORIZED"
+  | "PENDING"
+  | "CANCELLED"
+  | "PAUSED"
+  | "EXPIRED"
+  | "PAST_DUE"
+  | null;
 
 type Payment = {
   id: string;
@@ -69,33 +77,38 @@ export function PlanPageContent({
 
   const isSubscribed = subscriptionStatus === "ACTIVE" || subscriptionStatus === "AUTHORIZED";
   const isPending = subscriptionStatus === "PENDING";
-  const canSubscribe = !isSubscribed && !isPending;
+  const canSubscribe = !isSubscribed;
   const priceFormatted = `R$ ${(priceCents / 100).toFixed(2).replace(".", ",")}`;
 
   return (
     <div className="grid gap-6">
-      {/* Alerts */}
-          {success && (
+      {success && (
         <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
           <CheckCircle2 className="size-4 shrink-0" />
-          {success === "pagamento-aprovado" && "Pagamento aprovado com sucesso! Seu acesso esta ativo."}
-        </div>
-      )}
-      {notice && (
-        <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
-          {notice === "aguardando-pagamento" && "Seu pagamento esta sendo processado. Aguarde a confirmacao do Mercado Pago."}
-          {notice === "assinatura-existente" && "Voce ja tem acesso ativo."}
-        </div>
-      )}
-      {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error === "mercadopago" && "Nao foi possivel conectar ao Mercado Pago. Tente novamente."}
-          {error === "plano-nao-encontrado" && "Plano nao encontrado. Entre em contato com o suporte."}
-          {error === "pagamento-cancelado" && "Pagamento cancelado. Tente novamente quando quiser."}
+          {success === "pagamento-aprovado" &&
+            "Pagamento aprovado com sucesso! Seu acesso esta ativo."}
         </div>
       )}
 
-      {/* Trial status */}
+      {notice && (
+        <div className="rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
+          {notice === "aguardando-pagamento" &&
+            "Seu pagamento esta sendo processado. Aguarde a confirmacao do Mercado Pago."}
+          {notice === "assinatura-existente" && "Voce ja tem acesso ativo."}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error === "mercadopago" &&
+            "Nao foi possivel conectar ao Mercado Pago. Tente novamente."}
+          {error === "plano-nao-encontrado" &&
+            "Plano nao encontrado. Entre em contato com o suporte."}
+          {error === "pagamento-cancelado" &&
+            "Pagamento cancelado. Tente novamente quando quiser."}
+        </div>
+      )}
+
       <div
         className={[
           "flex items-center gap-3 rounded-lg border px-4 py-3",
@@ -113,11 +126,12 @@ export function PlanPageContent({
         <div>
           {trialStatus === "active" ? (
             <p className="text-sm font-medium text-primary">
-              Trial ativo — {trialDaysLeft} dia{trialDaysLeft !== 1 ? "s" : ""} restante{trialDaysLeft !== 1 ? "s" : ""}
+              Trial ativo - {trialDaysLeft} dia{trialDaysLeft !== 1 ? "s" : ""} restante
+              {trialDaysLeft !== 1 ? "s" : ""}
             </p>
           ) : (
             <p className="text-sm font-medium text-destructive">
-              Trial expirado — assine para continuar usando
+              Trial expirado - assine para continuar usando
             </p>
           )}
           {isSubscribed && (
@@ -128,7 +142,6 @@ export function PlanPageContent({
         </div>
       </div>
 
-      {/* Plan card */}
       <div className="rounded-lg border bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -166,12 +179,29 @@ export function PlanPageContent({
           {isSubscribed ? (
             <div className="flex items-center gap-2 rounded-lg bg-primary/15 px-4 py-3 text-sm font-medium text-primary">
               <CheckCircle2 className="size-4" />
-              Assinatura ativa — voce tem acesso completo
+              Assinatura ativa - voce tem acesso completo
             </div>
           ) : isPending ? (
-            <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-3 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              Pagamento pendente — aguardando autorizacao do Mercado Pago
+            <div className="grid gap-3 rounded-lg bg-muted px-4 py-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
+                Pagamento pendente - aguardando confirmacao do Mercado Pago
+              </div>
+              <form action={formAction}>
+                <Button className="w-full" disabled={pending} type="submit" variant="outline">
+                  {pending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Aguarde...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="size-4" />
+                      Tentar pagamento novamente
+                    </>
+                  )}
+                </Button>
+              </form>
             </div>
           ) : canSubscribe ? (
             <form action={formAction}>
@@ -193,7 +223,6 @@ export function PlanPageContent({
         </div>
       </div>
 
-      {/* Payment history */}
       <div className="rounded-lg border bg-card shadow-sm">
         <div className="border-b px-4 py-3">
           <h3 className="text-sm font-semibold">Historico de pagamentos</h3>
@@ -205,7 +234,7 @@ export function PlanPageContent({
                 <div>
                   <p className="text-sm font-medium">
                     {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status}
-                    {payment.statusDetail ? ` — ${payment.statusDetail}` : ""}
+                    {payment.statusDetail ? ` - ${payment.statusDetail}` : ""}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {payment.paidAt

@@ -274,6 +274,14 @@ export async function syncPaymentFromMP(paymentId: string): Promise<void> {
         updatedAt: now.toISOString(),
       })
       .eq("id", subscription.id);
+
+    await supabase
+      .from("User")
+      .update({
+        trialEndsAt: periodStartIso,
+        updatedAt: now.toISOString(),
+      })
+      .eq("id", subscription.userId);
   } else if (["cancelled", "rejected"].includes(status)) {
     await supabase
       .from("Subscription")

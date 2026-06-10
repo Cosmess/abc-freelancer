@@ -131,37 +131,48 @@ export function PlanPageContent({
         </div>
       )}
 
-      <div
-        className={[
-          "flex items-center gap-3 rounded-lg border px-4 py-3",
-          trialStatus === "active"
-            ? "border-primary/30 bg-primary/10"
-            : "border-destructive/30 bg-destructive/10",
-        ].join(" ")}
-      >
-        <Clock
+      {!isSubscribed && (
+        <div
           className={[
-            "size-5 shrink-0",
-            trialStatus === "active" ? "text-primary" : "text-destructive",
+            "flex items-center gap-3 rounded-lg border px-4 py-3",
+            trialStatus === "active"
+              ? "border-primary/30 bg-primary/10"
+              : "border-destructive/30 bg-destructive/10",
           ].join(" ")}
-        />
-        <div>
-          {trialStatus === "active" ? (
+        >
+          <Clock
+            className={[
+              "size-5 shrink-0",
+              trialStatus === "active" ? "text-primary" : "text-destructive",
+            ].join(" ")}
+          />
+          <div>
+            {trialStatus === "active" ? (
+              <p className="text-sm font-medium text-primary">
+                Trial ativo - {trialDaysLeft} dia{trialDaysLeft !== 1 ? "s" : ""} restante
+              </p>
+            ) : (
+              <p className="text-sm font-medium text-destructive">
+                Trial expirado - assine para continuar usando
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isSubscribed && (
+        <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3">
+          <Clock className="size-5 shrink-0 text-primary" />
+          <div>
             <p className="text-sm font-medium text-primary">
-              Trial ativo - {trialDaysLeft} dia{trialDaysLeft !== 1 ? "s" : ""} restante
-            </p>
-          ) : (
-            <p className="text-sm font-medium text-destructive">
-              Trial expirado - assine para continuar usando
-            </p>
-          )}
-          {isSubscribed && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
               Assinatura {STATUS_LABELS[subscriptionStatus ?? ""] ?? subscriptionStatus}
             </p>
-          )}
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              O trial foi encerrado no pagamento aprovado.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-lg border bg-card p-6 shadow-sm">
         <div className="flex items-start justify-between gap-4">

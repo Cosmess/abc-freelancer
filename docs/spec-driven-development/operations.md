@@ -35,7 +35,12 @@ npm run build
 
 - O app usa Checkout Pro com pagamentos avulsos.
 - O controle de plano e expiracao de acesso fica no banco do app.
-- Pagamentos aprovados pelo Mercado Pago renovam o periodo local de acesso.
+- Pagamentos aprovados pelo Mercado Pago iniciam um ciclo local de 30 dias.
+- Se o usuario renovar antes da expiraçao, o novo ciclo recomeça a partir do ultimo pagamento aprovado.
+- Quando o pagamento e aprovado, o trial do usuario termina na mesma data.
+- Cancelamento dentro de 7 dias do pagamento dispara reembolso integral via `POST /v1/payments/{id}/refunds`.
+- Fora da janela de 7 dias, o cancelamento apenas encerra a assinatura no banco e mantem o acesso ate `currentPeriodEnd`.
+- A tela de plano exibe a data de pagamento, inicio do plano, expiraçao e o historico de reembolso quando existir.
 - Nao usa Checkout Transparente, Public Key no frontend ou assinatura recorrente `PreApproval`.
 
 ## Deploy

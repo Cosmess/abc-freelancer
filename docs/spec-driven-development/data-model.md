@@ -15,6 +15,11 @@ Campos importantes:
 - `trialStartsAt`
 - `trialEndsAt`
 
+Regra:
+
+- O trial dura 7 dias a partir do cadastro.
+- Quando um pagamento e aprovado, o trial termina na mesma data do pagamento.
+
 ## EstablishmentProfile
 
 Perfil do estabelecimento, com endereco e `profilePhotoUrl`.
@@ -111,6 +116,71 @@ Campos importantes:
 - `status`
 - `acceptedAt`
 - `rejectedAt`
+
+## Plan
+
+Plano comercial por perfil.
+
+Campos importantes:
+
+- `role`
+- `name`
+- `description`
+- `priceCents`
+- `currency`
+- `trialDays`
+- `active`
+
+## Subscription
+
+Assinatura local do app, usada para controlar acesso, renovacao e cancelamento.
+
+Campos importantes:
+
+- `userId`
+- `planId`
+- `provider`
+- `status`
+- `mercadoPagoPreapprovalId`
+- `mercadoPagoPreferenceId`
+- `mercadoPagoPayerId`
+- `startedAt`
+- `trialEndsAt`
+- `currentPeriodStart`
+- `currentPeriodEnd`
+- `cancelledAt`
+
+Regras:
+
+- Pagamento aprovado inicia um novo ciclo de 30 dias.
+- Se houver renovacao antes da expiraçao, a contagem volta a partir do ultimo pagamento aprovado.
+- Cancelamento nao remove o acesso imediato; o acesso segue ate `currentPeriodEnd`.
+- Se o pagamento estiver dentro da janela de 7 dias, o cancelamento dispara reembolso integral.
+
+## PaymentHistory
+
+Historico de pagamentos e reembolsos do Mercado Pago.
+
+Campos importantes:
+
+- `mercadoPagoPaymentId`
+- `mercadoPagoPreapprovalId`
+- `status`
+- `statusDetail`
+- `amountCents`
+- `currency`
+- `paidAt`
+- `mercadoPagoRefundId`
+- `refundStatus`
+- `refundAmountCents`
+- `refundedAt`
+- `payerEmail`
+
+Regras:
+
+- `paidAt` guarda a data de aprovacao do pagamento.
+- `refundStatus` e `refundedAt` registram o reembolso quando existir.
+- O historico da tela de plano exibe tanto o pagamento quanto o reembolso.
 
 ## Regras
 

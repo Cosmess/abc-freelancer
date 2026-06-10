@@ -9,11 +9,15 @@
 - ViaCEP
 - Tema escuro
 - Mobile first
+- Checkout Pro do Mercado Pago
+- Webhook de pagamento
+- Ciclo de assinatura de 30 dias apos pagamento aprovado
+- Trial encerrado no pagamento aprovado
+- Cancelamento com reembolso integral em ate 7 dias
+- Exibicao de data de pagamento, inicio e expiraçao do plano
 
 ## Proximo
-
-- Checkout Pro do Mercado Pago completo
-- Webhook de pagamento
+- Melhorias de comunicacao do fluxo de assinatura
 
 ## Fora do escopo imediato
 

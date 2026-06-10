@@ -49,4 +49,4 @@
 - Supabase Storage: fotos de perfil e logos.
 - ViaCEP: preenchimento de endereco por CEP.
 - Google Maps: link gerado a partir do endereco da vaga.
-- Mercado Pago Checkout Pro: criacao de preferencia, redirecionamento hospedado e webhook de pagamento.
+- Mercado Pago Checkout Pro: criacao de preferencia, redirecionamento hospedado, webhook de pagamento e reembolso integral por pagamento aprovado dentro da janela de 7 dias.

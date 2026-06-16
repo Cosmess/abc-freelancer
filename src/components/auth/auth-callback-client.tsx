@@ -25,6 +25,16 @@ function getTarget(
   return defaultTarget;
 }
 
+function getSignupRole(url: URL): "FREELANCER" | "ESTABLISHMENT" | null {
+  const role = url.searchParams.get("role");
+
+  if (role === "FREELANCER" || role === "ESTABLISHMENT") {
+    return role;
+  }
+
+  return null;
+}
+
 type AuthCallbackClientProps = {
   defaultTarget: string;
   message: string;
@@ -61,6 +71,7 @@ export function AuthCallbackClient({
         const target = forceDefaultTarget
           ? defaultTarget
           : getTarget(url, hashParams, defaultTarget);
+        const signupRole = getSignupRole(url);
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
 
@@ -82,6 +93,14 @@ export function AuthCallbackClient({
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
           throw new Error("Sessao nao encontrada apos a confirmacao.");
+        }
+
+        if (signupRole) {
+          const { error } = await supabase.auth.updateUser({
+            data: { role: signupRole },
+          });
+
+          if (error) throw error;
         }
 
         if (cancelled) return;

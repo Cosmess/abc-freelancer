@@ -5,6 +5,7 @@ import Link from "next/link";
 import { KeyRound, LogIn, MailCheck, RefreshCw, Send } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
+import { GoogleAuthButton } from "@/components/forms/google-auth-button";
 import { Button } from "@/components/ui/button";
 import type { AuthActionState } from "@/lib/auth/validators";
 import { loginAction, resendVerificationEmailAction } from "@/server/actions/auth";
@@ -20,6 +21,13 @@ export function LoginForm() {
 
   return (
     <div className="grid gap-4">
+      <GoogleAuthButton label="Entrar com Google" next="/app" />
+
+      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        ou entre com email
+        <span className="h-px flex-1 bg-border" />
+      </div>
       {/* ── Login form ── */}
       <form action={loginFormAction} className="grid gap-4">
         {loginState.message && !loginState.emailNotVerified ? (

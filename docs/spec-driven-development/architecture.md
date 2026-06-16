@@ -25,6 +25,7 @@
 ## Areas principais do app
 
 - Publico: `/`, `/login`, `/cadastro`, `/vagas`, `/estabelecimentos`.
+- Auth: `/auth/callback`, `/auth/confirmar-email`, `/auth/esqueci-senha`, `/auth/recuperar-senha`, `/auth/nova-senha`.
 - Freelancer: `/app/freelancer`, `/app/freelancer/perfil`, `/app/freelancer/candidaturas`, `/app/freelancer/plano`.
 - Estabelecimento: `/app/estabelecimento`, `/app/estabelecimento/perfil`, `/app/estabelecimento/vagas`, `/app/estabelecimento/vagas/nova`, `/app/estabelecimento/vagas/[id]/candidatos`, `/app/estabelecimento/plano`.
 - Admin: `/admin` existe como rota protegida reservada, sem tela operacional no escopo imediato.
@@ -39,14 +40,20 @@
 ## Regras de implementacao
 
 - Toda mutacao critica valida sessao e permissao no servidor.
+- Areas de catalogo, vagas e candidatos devem checar acesso ativo quando o trial terminou.
 - O proxy pode redirecionar rapido, mas nao substitui guard.
 - Dados sensiveis nunca devem depender apenas do que vem do browser.
 - Lookups externos ficam em Route Handlers internos, nao no client direto.
 
 ## Integracoes atuais
 
-- Supabase Auth: login, cadastro, reset e confirmacao de email.
+- Supabase Auth: login, cadastro, Google OAuth, reset e confirmacao de email.
 - Supabase Storage: fotos de perfil e logos.
 - ViaCEP: preenchimento de endereco por CEP.
 - Google Maps: link gerado a partir do endereco da vaga.
 - Mercado Pago Checkout Pro: criacao de preferencia, redirecionamento hospedado, webhook de pagamento e reembolso integral por pagamento aprovado dentro da janela de 7 dias.
+
+## Assets publicos
+
+- `public/favicon.svg`: icone do navegador.
+- `public/og-image.svg`: imagem Open Graph usada em preview de WhatsApp/redes sociais.

@@ -17,6 +17,9 @@ ABC Freelancer conecta estabelecimentos locais com freelancers para demandas ope
 - Contato liberado sob regra.
 - Perfil com foto/logo e endereco.
 - Cadastro sem CPF ou CNPJ.
+- Cadastro por email/senha ou Google.
+- Recuperacao de senha.
+- Bloqueio de areas operacionais quando o acesso pago/trial nao esta ativo.
 
 ## Experiencia atual
 
@@ -24,3 +27,5 @@ ABC Freelancer conecta estabelecimentos locais com freelancers para demandas ope
 - Painel por role.
 - Catalogo de vagas com Maps e WhatsApp.
 - Perfil com upload de foto comprimida.
+- Cadastro com validacao campo a campo.
+- Preview social configurado para compartilhamento em WhatsApp e redes sociais.

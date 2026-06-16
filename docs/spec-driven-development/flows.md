@@ -2,10 +2,30 @@
 
 ## Cadastro
 
-1. Usuario se cadastra.
-2. Email precisa ser confirmado.
-3. Perfil e completado depois do login.
-4. Se o email estiver pendente, o acesso nao avanca para as areas internas.
+1. Usuario escolhe freelancer ou estabelecimento.
+2. Usuario se cadastra por email/senha ou Google.
+3. No cadastro por email/senha, a validacao acontece campo a campo no client e tambem no servidor.
+4. Email precisa ser confirmado quando o cadastro usa email/senha.
+5. No cadastro com Google, o role escolhido e enviado no callback e salvo antes da sincronizacao interna.
+6. Perfil e completado depois do login.
+7. Se o email estiver pendente, o acesso nao avanca para as areas internas.
+
+## Recuperacao de senha
+
+1. Usuario acessa `/auth/esqueci-senha`.
+2. Supabase envia email de recuperacao com `redirectTo` para `/auth/recuperar-senha`.
+3. `/auth/recuperar-senha` finaliza a sessao temporaria do link e redireciona para `/auth/nova-senha`.
+4. Usuario define a nova senha.
+5. Apos sucesso, o usuario e redirecionado para `/login`.
+
+## Acesso por trial ou plano
+
+1. Usuario permanece em trial por 7 dias.
+2. Enquanto o trial esta ativo, pode acessar catalogos e areas operacionais do seu perfil.
+3. Quando o trial expira sem assinatura ativa, as areas bloqueadas exibem mensagem com CTA para plano.
+4. Estabelecimento sem acesso ativo nao ve catalogo de freelancers, vagas abertas nem gestao de vagas/candidatos.
+5. Freelancer sem acesso ativo nao ve vagas abertas nem catalogo de estabelecimentos.
+6. Server Actions sensiveis tambem validam acesso ativo antes de mutar dados.
 
 ## Vagas
 
@@ -44,3 +64,4 @@
 - Foto/logo pode ser enviada com ate 8 MB no navegador.
 - O upload e comprimido antes de chegar no Supabase Storage.
 - O campo salvo no banco e a URL publica da imagem.
+- Preview de compartilhamento usa metadata Open Graph com `public/og-image.svg`.

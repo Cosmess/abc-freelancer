@@ -31,6 +31,25 @@ npm run build
 - `MERCADO_PAGO_ACCESS_TOKEN`
 - `MERCADO_PAGO_WEBHOOK_SECRET`
 
+## Supabase Auth
+
+- Site URL: `https://www.abcfreelancer.com.br`
+- Redirect URLs principais:
+  - `https://www.abcfreelancer.com.br/auth/callback`
+  - `https://abcfreelancer.com.br/auth/callback`
+  - `https://www.abcfreelancer.com.br/auth/recuperar-senha`
+  - `https://abcfreelancer.com.br/auth/recuperar-senha`
+- Provider Google precisa estar ativo com Client ID e Client Secret do Google Cloud.
+- Template de reset de senha deve usar `{{ .ConfirmationURL }}` no link.
+
+## Google OAuth
+
+- Authorized JavaScript origins:
+  - `https://www.abcfreelancer.com.br`
+  - `https://abcfreelancer.com.br`
+- Authorized redirect URI no Google Cloud:
+  - `https://ioyicsvsfppmenqncvaj.supabase.co/auth/v1/callback`
+
 ## Mercado Pago
 
 - O app usa Checkout Pro com pagamentos avulsos.
@@ -47,6 +66,7 @@ npm run build
 
 - Publicar na Vercel.
 - Aplicar mudancas de schema com `npm run db:push`.
+- Apos alterar metadata social, validar o cache em `https://developers.facebook.com/tools/debug/`.
 
 ## Verificacao manual util
 
@@ -56,3 +76,7 @@ npm run build
 - Criacao de vaga.
 - Candidatura e aceite.
 - Liberacao de WhatsApp.
+- Cadastro com Google como freelancer e como estabelecimento.
+- Recuperacao de senha ate `/auth/nova-senha` e redirecionamento para login apos sucesso.
+- Trial expirado sem assinatura ativa bloqueando vagas/catalogos.
+- Preview social usando `og-image.svg`.

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
 import { Check, KeyRound } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
@@ -12,10 +12,21 @@ import { updatePasswordAction } from "@/server/actions/auth";
 const initialState: AuthActionState = {};
 
 export function UpdatePasswordForm() {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     updatePasswordAction,
     initialState,
   );
+
+  useEffect(() => {
+    if (!state.success) return;
+
+    const timeoutId = window.setTimeout(() => {
+      router.replace("/login");
+    }, 1500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [router, state.success]);
 
   return (
     <form action={formAction} className="grid gap-4">
@@ -69,12 +80,6 @@ export function UpdatePasswordForm() {
           </>
         )}
       </Button>
-
-      {state.success ? (
-        <Button asChild variant="outline" className="w-full">
-          <Link href="/login">Ir para login</Link>
-        </Button>
-      ) : null}
     </form>
   );
 }

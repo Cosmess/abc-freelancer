@@ -11,6 +11,20 @@ function sanitizeNext(next: string | null): string {
   return next;
 }
 
+function getTarget(
+  url: URL,
+  hashParams: URLSearchParams,
+  defaultTarget: string,
+): string {
+  const next = sanitizeNext(url.searchParams.get("next"));
+  const type = url.searchParams.get("type") ?? hashParams.get("type");
+
+  if (next) return next;
+  if (type === "recovery") return "/auth/nova-senha";
+
+  return defaultTarget;
+}
+
 type AuthCallbackClientProps = {
   defaultTarget: string;
   message: string;
@@ -40,9 +54,9 @@ export function AuthCallbackClient({
     async function finalize() {
       try {
         const url = new URL(window.location.href);
-        const target = sanitizeNext(url.searchParams.get("next")) || defaultTarget;
         const code = url.searchParams.get("code");
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const target = getTarget(url, hashParams, defaultTarget);
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
 

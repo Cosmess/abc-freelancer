@@ -19,6 +19,20 @@ export const resendVerificationSchema = z.object({
   email: z.email("Informe um email valido.").trim().toLowerCase(),
 });
 
+export const resetPasswordSchema = z.object({
+  email: z.email("Informe um email valido.").trim().toLowerCase(),
+});
+
+export const updatePasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Confirme sua nova senha."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas precisam ser iguais.",
+    path: ["confirmPassword"],
+  });
+
 export const freelancerSignupSchema = z.object({
   fullName: z.string().min(2, "Informe seu nome completo.").trim(),
   email: z.email("Informe um email valido.").trim().toLowerCase(),

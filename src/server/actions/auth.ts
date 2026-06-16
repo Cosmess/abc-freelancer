@@ -18,6 +18,8 @@ import {
   freelancerSignupSchema,
   loginSchema,
   resendVerificationSchema,
+  resetPasswordSchema,
+  updatePasswordSchema,
 } from "@/lib/auth/validators";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -201,6 +203,66 @@ export async function resendVerificationEmailAction(
   return {
     success: true,
     message: "Email de verificacao reenviado. Verifique tambem spam e lixo eletronico.",
+  };
+}
+
+export async function requestPasswordResetAction(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = resetPasswordSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return { errors: flattenErrors(parsed.error) };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${getAppUrl()}/auth/callback?next=/auth/nova-senha`,
+  });
+
+  if (error) {
+    return { message: getAuthErrorMessage(error) };
+  }
+
+  return {
+    success: true,
+    message:
+      "Se este email estiver cadastrado, enviaremos um link para redefinir sua senha. Verifique tambem o spam.",
+  };
+}
+
+export async function updatePasswordAction(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = updatePasswordSchema.safeParse(Object.fromEntries(formData));
+
+  if (!parsed.success) {
+    return { errors: flattenErrors(parsed.error) };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return {
+      message:
+        "O link de recuperacao expirou ou ja foi usado. Solicite um novo link para redefinir sua senha.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { message: getAuthErrorMessage(error) };
+  }
+
+  return {
+    success: true,
+    message: "Senha atualizada com sucesso. Voce ja pode entrar com a nova senha.",
   };
 }
 

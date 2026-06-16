@@ -67,21 +67,26 @@ async function hasActiveSubscription(userId: string): Promise<boolean> {
   return Boolean(subscription);
 }
 
-export async function requireActiveAccess(user: InternalUser): Promise<void> {
+export function getPlanPathForRole(role: UserRole): string {
+  return role === UserRole.ESTABLISHMENT
+    ? "/app/estabelecimento/plano"
+    : "/app/freelancer/plano";
+}
+
+export async function hasActiveAccess(user: InternalUser): Promise<boolean> {
   // ADMINs always have access
-  if (user.role === UserRole.ADMIN) return;
+  if (user.role === UserRole.ADMIN) return true;
 
   // Trial still valid
-  if (new Date() <= new Date(user.trialEndsAt)) return;
+  if (new Date() <= new Date(user.trialEndsAt)) return true;
 
-  // Check for an active paid subscription
-  const active = await hasActiveSubscription(user.id);
+  return hasActiveSubscription(user.id);
+}
+
+export async function requireActiveAccess(user: InternalUser): Promise<void> {
+  const active = await hasActiveAccess(user);
 
   if (!active) {
-    const planPath =
-      user.role === UserRole.ESTABLISHMENT
-        ? "/app/estabelecimento/plano"
-        : "/app/freelancer/plano";
-    redirect(planPath);
+    redirect(getPlanPathForRole(user.role));
   }
 }

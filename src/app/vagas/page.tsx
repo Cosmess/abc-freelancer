@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BriefcaseBusiness, ChevronLeft, ChevronRight, MapPin, Search, Send } from "lucide-react";
 
+import { AccessRequiredCard } from "@/components/access/access-required-card";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/generated/prisma/client";
 import {
@@ -12,7 +13,11 @@ import {
 import { JOBS_PAGE_SIZE, getOpenJobListingsPaged } from "@/lib/jobs/job-store";
 import { getActiveSpecialties, getFreelancerProfile } from "@/lib/profiles/profile-store";
 import { applyToJobAction } from "@/server/actions/jobs";
-import { requireUser } from "@/server/guards/auth";
+import {
+  getPlanPathForRole,
+  hasActiveAccess,
+  requireUser,
+} from "@/server/guards/auth";
 
 type Props = {
   searchParams: Promise<{
@@ -25,6 +30,35 @@ type Props = {
 
 export default async function JobsPage({ searchParams }: Props) {
   const user = await requireUser();
+  const activeAccess = await hasActiveAccess(user);
+
+  if (!activeAccess) {
+    const returnPath =
+      user.role === UserRole.ESTABLISHMENT
+        ? "/app/estabelecimento"
+        : "/app/freelancer";
+
+    return (
+      <main className="min-h-screen bg-muted/30 text-foreground">
+        <section className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-5">
+          <div>
+            <Link href="/" className="text-sm font-medium text-primary">
+              ABC Freelancer
+            </Link>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Vagas abertas
+            </h1>
+          </div>
+          <AccessRequiredCard
+            planPath={getPlanPathForRole(user.role)}
+            returnPath={returnPath}
+            description="Seu periodo de teste terminou. Ative um plano para voltar a acessar vagas, candidaturas e contatos liberados pela plataforma."
+          />
+        </section>
+      </main>
+    );
+  }
+
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const freelancerProfile =

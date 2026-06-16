@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ChevronLeft, ChevronRight, MessageCircle, Search, Users } from "lucide-react";
 
+import { AccessRequiredCard } from "@/components/access/access-required-card";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
@@ -11,7 +12,11 @@ import {
   getEstablishmentProfile,
   getFreelancerCatalog,
 } from "@/lib/profiles/profile-store";
-import { requireEstablishment } from "@/server/guards/auth";
+import {
+  getPlanPathForRole,
+  hasActiveAccess,
+  requireEstablishment,
+} from "@/server/guards/auth";
 
 export const metadata: Metadata = {
   title: "Freelancers — ABC Freelancer",
@@ -36,6 +41,30 @@ const SHIFT_OPTIONS = [
 
 export default async function FreelancerCatalogPage({ searchParams }: Props) {
   const user = await requireEstablishment();
+  const activeAccess = await hasActiveAccess(user);
+
+  if (!activeAccess) {
+    return (
+      <main className="min-h-screen bg-muted/30 text-foreground">
+        <section className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-5">
+          <div>
+            <Link href="/" className="text-sm font-medium text-primary">
+              ABC Freelancer
+            </Link>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Freelancers
+            </h1>
+          </div>
+          <AccessRequiredCard
+            planPath={getPlanPathForRole(user.role)}
+            returnPath="/app/estabelecimento"
+            description="Seu periodo de teste terminou. Ative um plano para voltar a buscar profissionais, ver contatos e contratar freelancers pelo ABC Freelancer."
+          />
+        </section>
+      </main>
+    );
+  }
+
   const profile = await getEstablishmentProfile(user.id);
   const params = await searchParams;
 

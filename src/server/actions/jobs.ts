@@ -87,6 +87,7 @@ export async function applyToJobAction(jobPostId: string, formData: FormData) {
 
 export async function deleteJobPostAction(jobPostId: string) {
   const user = await requireEstablishment();
+  await requireActiveAccess(user);
   const profile = await getEstablishmentProfile(user.id);
 
   if (!profile) {
@@ -105,6 +106,7 @@ export async function deleteJobPostAction(jobPostId: string) {
 
 export async function closeJobPostAction(jobPostId: string) {
   const user = await requireEstablishment();
+  await requireActiveAccess(user);
   const profile = await getEstablishmentProfile(user.id);
 
   if (!profile) {
@@ -123,6 +125,7 @@ export async function closeJobPostAction(jobPostId: string) {
 
 export async function acceptApplicationAction(applicationId: string, jobPostId: string) {
   const user = await requireEstablishment();
+  await requireActiveAccess(user);
   const profile = await getEstablishmentProfile(user.id);
 
   if (!profile) {
@@ -143,6 +146,7 @@ export async function acceptApplicationAction(applicationId: string, jobPostId: 
 
 export async function rejectApplicationAction(applicationId: string, jobPostId: string) {
   const user = await requireEstablishment();
+  await requireActiveAccess(user);
   const profile = await getEstablishmentProfile(user.id);
 
   if (!profile) {

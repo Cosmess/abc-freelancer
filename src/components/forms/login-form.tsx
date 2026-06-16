@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { LogIn, MailCheck, RefreshCw, Send } from "lucide-react";
+import { KeyRound, LogIn, MailCheck, RefreshCw, Send } from "lucide-react";
 
 import { FieldError } from "@/components/forms/field-error";
 import { Button } from "@/components/ui/button";
@@ -40,9 +40,21 @@ export function LoginForm() {
           <FieldError errors={loginState.errors?.email} />
         </label>
 
-        <label className="grid gap-1.5 text-sm font-medium">
-          Senha
+        <div className="grid gap-1.5">
+          <div className="flex items-center justify-between gap-3">
+            <label className="text-sm font-medium" htmlFor="login-password">
+              Senha
+            </label>
+            <Link
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80"
+              href="/auth/esqueci-senha"
+            >
+              <KeyRound className="size-3.5" />
+              Esqueci minha senha
+            </Link>
+          </div>
           <input
+            id="login-password"
             className="h-11 rounded-md border bg-input px-3 text-base text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring sm:h-10 sm:text-sm"
             name="password"
             type="password"
@@ -50,7 +62,7 @@ export function LoginForm() {
             required
           />
           <FieldError errors={loginState.errors?.password} />
-        </label>
+        </div>
 
         <Button className="h-11 w-full sm:h-10" disabled={loginPending} type="submit">
           <LogIn className="size-4" />

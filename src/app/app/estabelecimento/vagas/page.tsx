@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, ClipboardList, LockKeyhole, Plus, Trash2, Users } from "lucide-react";
 
+import { AccessRequiredCard } from "@/components/access/access-required-card";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { RefreshButton } from "@/components/ui/refresh-button";
@@ -8,7 +9,11 @@ import { getJobStatusLabel } from "@/lib/jobs/formatters";
 import { JOBS_PAGE_SIZE, getJobPostsByEstablishmentPaged } from "@/lib/jobs/job-store";
 import { getEstablishmentProfile } from "@/lib/profiles/profile-store";
 import { closeJobPostAction, deleteJobPostAction } from "@/server/actions/jobs";
-import { requireEstablishment } from "@/server/guards/auth";
+import {
+  getPlanPathForRole,
+  hasActiveAccess,
+  requireEstablishment,
+} from "@/server/guards/auth";
 
 type Props = {
   searchParams: Promise<{
@@ -19,6 +24,23 @@ type Props = {
 
 export default async function EstablishmentJobsPage({ searchParams }: Props) {
   const user = await requireEstablishment();
+  const activeAccess = await hasActiveAccess(user);
+
+  if (!activeAccess) {
+    return (
+      <main className="min-h-screen bg-muted/30 text-foreground">
+        <AppHeader title="Vagas" userName={user.name} />
+        <section className="mx-auto grid max-w-6xl gap-5 px-4 py-6 sm:px-5 sm:py-8">
+          <AccessRequiredCard
+            planPath={getPlanPathForRole(user.role)}
+            returnPath="/app/estabelecimento"
+            description="Seu periodo de teste terminou. Ative um plano para voltar a publicar vagas, acompanhar candidatos e gerenciar oportunidades."
+          />
+        </section>
+      </main>
+    );
+  }
+
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.pagina ?? "1", 10) || 1);
   const profile = await getEstablishmentProfile(user.id);

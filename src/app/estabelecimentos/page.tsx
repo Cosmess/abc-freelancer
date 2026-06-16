@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Building2, ChevronLeft, ChevronRight, MessageCircle, Search } from "lucide-react";
 
+import { AccessRequiredCard } from "@/components/access/access-required-card";
 import { Button } from "@/components/ui/button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { getInstagramUrl, getWhatsAppUrl } from "@/lib/jobs/formatters";
@@ -10,7 +11,11 @@ import {
   getEstablishmentCatalog,
   getFreelancerProfile,
 } from "@/lib/profiles/profile-store";
-import { requireFreelancer } from "@/server/guards/auth";
+import {
+  getPlanPathForRole,
+  hasActiveAccess,
+  requireFreelancer,
+} from "@/server/guards/auth";
 
 export const metadata: Metadata = {
   title: "Estabelecimentos — ABC Freelancer",
@@ -28,6 +33,30 @@ type Props = {
 
 export default async function EstablishmentCatalogPage({ searchParams }: Props) {
   const user = await requireFreelancer();
+  const activeAccess = await hasActiveAccess(user);
+
+  if (!activeAccess) {
+    return (
+      <main className="min-h-screen bg-muted/30 text-foreground">
+        <section className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-5">
+          <div>
+            <Link href="/" className="text-sm font-medium text-primary">
+              ABC Freelancer
+            </Link>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
+              Estabelecimentos
+            </h1>
+          </div>
+          <AccessRequiredCard
+            planPath={getPlanPathForRole(user.role)}
+            returnPath="/app/freelancer"
+            description="Seu periodo de teste terminou. Ative um plano para voltar a consultar estabelecimentos, contatos e oportunidades da regiao."
+          />
+        </section>
+      </main>
+    );
+  }
+
   const profile = await getFreelancerProfile(user.id);
   const params = await searchParams;
 

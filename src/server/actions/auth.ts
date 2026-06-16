@@ -32,7 +32,11 @@ async function assertEmailAvailable(email: string): Promise<AuthActionState | nu
   const existing = await findInternalUserByEmail(email);
 
   if (existing) {
-    return { message: "Este email ja esta em uso. Faca login ou use outro email." };
+    return {
+      errors: {
+        email: ["Este email ja esta em uso. Faca login ou use outro email."],
+      },
+    };
   }
 
   return null;

@@ -29,10 +29,12 @@ type AuthCallbackClientProps = {
   defaultTarget: string;
   message: string;
   title?: string;
+  forceDefaultTarget?: boolean;
 };
 
 export function AuthCallbackClient({
   defaultTarget,
+  forceDefaultTarget = false,
   message,
   title = "Confirmando acesso",
 }: AuthCallbackClientProps) {
@@ -56,7 +58,9 @@ export function AuthCallbackClient({
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-        const target = getTarget(url, hashParams, defaultTarget);
+        const target = forceDefaultTarget
+          ? defaultTarget
+          : getTarget(url, hashParams, defaultTarget);
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
 
@@ -82,7 +86,6 @@ export function AuthCallbackClient({
 
         if (cancelled) return;
 
-        window.history.replaceState(window.history.state, "", target);
         router.replace(target);
       } catch (error) {
         console.error("[auth/callback] Failed to finalize auth session:", error);
@@ -97,7 +100,7 @@ export function AuthCallbackClient({
     return () => {
       cancelled = true;
     };
-  }, [defaultTarget, message, router, supabase]);
+  }, [defaultTarget, forceDefaultTarget, message, router, supabase]);
 
   return (
     <main className="min-h-screen bg-muted/30 px-5 py-10 text-foreground">

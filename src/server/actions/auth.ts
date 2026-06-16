@@ -217,11 +217,8 @@ export async function requestPasswordResetAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const resetUrl = new URL(`${getAppUrl()}/auth/callback`);
-  resetUrl.searchParams.set("next", "/auth/nova-senha");
-
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: resetUrl.toString(),
+    redirectTo: `${getAppUrl()}/auth/recuperar-senha`,
   });
 
   if (error) {

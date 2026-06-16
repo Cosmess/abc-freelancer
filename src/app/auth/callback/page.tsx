@@ -11,6 +11,16 @@ function sanitizeNext(next: string | null): string {
   return next;
 }
 
+function getRecoveryTarget(url: URL, hashParams: URLSearchParams): string {
+  const next = sanitizeNext(url.searchParams.get("next"));
+  const type = url.searchParams.get("type") ?? hashParams.get("type");
+
+  if (next) return next;
+  if (type === "recovery") return "/auth/nova-senha";
+
+  return "";
+}
+
 export default function AuthCallbackPage() {
   const router = useRouter();
   const [message, setMessage] = useState("Validando seu acesso...");
@@ -30,13 +40,17 @@ export default function AuthCallbackPage() {
     async function finalize() {
       try {
         const url = new URL(window.location.href);
-        const next = sanitizeNext(url.searchParams.get("next"));
         const code = url.searchParams.get("code");
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
+        const target = getRecoveryTarget(url, hashParams) || "/app";
 
-        setMessage("Concluindo a confirmacao do email...");
+        setMessage(
+          target === "/auth/nova-senha"
+            ? "Abrindo a tela para criar sua nova senha..."
+            : "Concluindo a confirmacao do email...",
+        );
 
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -58,7 +72,6 @@ export default function AuthCallbackPage() {
 
         if (cancelled) return;
 
-        const target = next || "/app";
         window.history.replaceState(window.history.state, "", target);
         router.replace(target);
       } catch (error) {
